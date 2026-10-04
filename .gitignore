@@ -20,3 +20,7 @@ tsconfig.tsbuildinfo
 
 # Screenshot hasil audit UI
 .screenshots/
+
+# f2 pdf watcher scratch
+.f2-images/
+.f2-watcher-state.json
