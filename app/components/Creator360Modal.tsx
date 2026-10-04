@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "../../lib/supabase-browser";
+import { readNumber, sortByValue } from "../../lib/numeric";
 
 type Props={workspaceId:string;creatorId:number|null;startDate:string;endDate:string;onClose:()=>void};
 type Row=Record<string,any>;
 type PeriodMode="7d"|"30d"|"month"|"year";
-const money=(v:any)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(v||0));
-const num=(v:any)=>new Intl.NumberFormat("id-ID").format(Number(v||0));
+const money=(v:any)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(readNumber(v));
+const num=(v:any)=>new Intl.NumberFormat("id-ID").format(readNumber(v));
 const DEFAULT_MANUAL={favorite:false,rating:0,program_status:"Not Joined",top_creator:false,ads_support:0,target_sales:0,target_live:0,target_video:0,video_links:["","",""]};
 const MONTHS=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
@@ -29,7 +30,7 @@ function previousFor(mode:PeriodMode,current:{start:string;end:string}){
   const days=Math.round((e.getTime()-s.getTime())/86400000)+1;const pe=new Date(s);pe.setUTCDate(pe.getUTCDate()-1);const ps=new Date(pe);ps.setUTCDate(ps.getUTCDate()-days+1);return{start:iso(ps),end:iso(pe),label:`${iso(ps)} → ${iso(pe)}`};
 }
 function delta(current:any,previous:any){const c=Number(current||0),p=Number(previous||0);if(!p)return c>0?100:0;return((c-p)/Math.abs(p))*100}
-function sortRows(rows:Row[],key:string,asc:boolean){return[...rows].sort((a,b)=>{const av=a?.[key],bv=b?.[key];const an=Number(av),bn=Number(bv);if(av!==""&&bv!==""&&Number.isFinite(an)&&Number.isFinite(bn))return(an-bn)*(asc?1:-1);return String(av??"").localeCompare(String(bv??""),"id",{numeric:true,sensitivity:"base"})*(asc?1:-1)})}
+function sortRows(rows:Row[],key:string,asc:boolean){return sortByValue(rows,key,asc)}
 function overlapDays(aStart:string,aEnd:string,bStart:string,bEnd:string){const start=Math.max(utcDate(aStart).getTime(),utcDate(bStart).getTime());const end=Math.min(utcDate(aEnd).getTime(),utcDate(bEnd).getTime());return end<start?0:Math.floor((end-start)/86400000)+1}
 
 export default function Creator360Modal({workspaceId,creatorId,startDate,endDate,onClose}:Props){
