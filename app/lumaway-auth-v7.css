@@ -3,7 +3,11 @@
 .auth-v7-shell{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(430px,.88fr);min-height:100svh;background:#fff}
 .auth-v7-showcase{position:relative;min-height:100svh;overflow:hidden;background:#0e1838}
 .auth-v7-brand{position:absolute;z-index:20;left:34px;top:28px;display:grid;gap:3px;color:#fff}
-.auth-v7-brand img,.auth-v7-mobile-brand img{display:block;width:138px;height:auto;object-fit:contain}
+/* The mark PNG is text-free; the wordmark and tagline are rendered next to it.
+   The old luma-logo.png lockup already baked the tagline into the image, which
+   produced two overlapping copies of it on the showcase panel. */
+.auth-v7-brand img,.auth-v7-mobile-brand img{display:block;width:34px;height:auto;object-fit:contain}
+.auth-v7-brand b,.auth-v7-mobile-brand b{font-size:19px;font-weight:800;letter-spacing:.02em;color:#fff}
 .auth-v7-brand span,.auth-v7-mobile-brand span{font-size:12px;letter-spacing:.02em;color:rgba(255,255,255,.72)}
 .auth-v7-slides,.auth-v7-slide{position:absolute;inset:0}
 .auth-v7-slide{opacity:0;pointer-events:none;transition:opacity .7s ease,transform 1.2s ease;transform:scale(1.025)}
@@ -94,8 +98,11 @@
   .auth-v7-slide-copy p{font-size:12px}
   .auth-v7-dots{left:22px;bottom:20px}
   .auth-v7-panel{padding:32px 22px 46px}
-  .auth-v7-mobile-brand{display:grid;gap:2px;margin-bottom:26px}
-  .auth-v7-mobile-brand span{color:#98a2b3}
+  .auth-v7-mobile-brand{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+  .auth-v7-mobile-brand img{width:28px}
+  .auth-v7-mobile-brand .auth-v7-brand-text{display:grid;gap:1px;line-height:1.25}
+  .auth-v7-mobile-brand b{color:#101828}
+  .auth-v7-mobile-brand span>span{color:#98a2b3}
 }
 @media(max-width:560px){
   .auth-v7-showcase{min-height:250px;height:34svh}

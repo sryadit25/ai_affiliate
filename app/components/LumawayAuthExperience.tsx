@@ -51,7 +51,7 @@ function AuthCarousel(){
     return()=>window.clearInterval(timer);
   },[]);
   return <aside className="auth-v7-showcase">
-    <div className="auth-v7-brand"><img src="/luma-logo.png" alt="Lumaway"/><span>Light Up Your Potential.</span></div>
+    <div className="auth-v7-brand"><img src="/luma-mark.png" alt="Lumaway"/><b>LUMA</b><span>Light Up Your Potential.</span></div>
     <div className="auth-v7-slides">
       {slides.map((slide,i)=><article key={slide.title} className={"auth-v7-slide "+(i===index?"active":"")}>
         <img src={slide.image} alt="" loading={i===0?"eager":"lazy"}/>
@@ -241,7 +241,7 @@ export default function LumawayAuthExperience({onAuthenticated}:{onAuthenticated
     <section className="auth-v7-shell">
       <AuthCarousel/>
       <section className="auth-v7-panel">
-        <div className="auth-v7-mobile-brand"><img src="/luma-logo.png" alt="Lumaway"/><span>Light Up Your Potential.</span></div>
+        <div className="auth-v7-mobile-brand"><img src="/luma-mark.png" alt="Lumaway"/><span className="auth-v7-brand-text"><b>LUMA</b><span>Light Up Your Potential.</span></span></div>
         <div className="auth-v7-form">
           <span className="auth-v7-dot" aria-hidden="true"/>
           <h1>{title}</h1>
