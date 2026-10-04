@@ -18,7 +18,7 @@
     "check:numeric": "node --experimental-strip-types scripts/affiliate-table-numeric-check.mjs",
     "check:smoke": "node scripts/lumaway-http-smoke.mjs",
     "check:load": "node scripts/lumaway-load-test.mjs",
-    "verify": "npm run check:migrations && npm run check:routes && npm run check:assets && npm run typecheck",
+    "verify": "npm run check:migrations && npm run check:routes && npm run check:assets && npm run check:numeric && npm run typecheck",
     "verify:prepush": "node scripts/pre-push-check.mjs",
     "setup:hooks": "git config core.hooksPath .githooks",
     "audit:auth": "node scripts/audit-auth.mjs",
