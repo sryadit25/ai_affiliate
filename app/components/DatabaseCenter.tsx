@@ -28,10 +28,23 @@ export default function DatabaseCenter({ workspaceId }: Props) {
   const [salesSort,setSalesSort]=useState({key:"",asc:false});
   const [productSort,setProductSort]=useState({key:"gmv",asc:false});
   const [deleteTarget,setDeleteTarget]=useState<Row|null>(null);
-  const [verifyCode,setVerifyCode]=useState("");
-  const [verifyInput,setVerifyInput]=useState("");
   const [deleteBusy,setDeleteBusy]=useState(false);
-  const [deleteStep,setDeleteStep]=useState<"confirm"|"verify">("confirm");
+  const [selectedIds,setSelectedIds]=useState<string[]>([]);
+  const [bulkBusy,setBulkBusy]=useState(false);
+  const [bulkArmed,setBulkArmed]=useState(false);
+  const [datePreset,setDatePreset]=useState("");
+
+  function applyPreset(kind:string){
+    setDatePreset(kind);
+    if(!kind){setStart("");setEnd("");return}
+    const today=new Date();
+    const iso=(d:Date)=>d.toISOString().slice(0,10);
+    if(kind==="7d"){const s=new Date(today);s.setDate(s.getDate()-6);setStart(iso(s));setEnd(iso(today));return}
+    if(kind==="30d"){const s=new Date(today);s.setDate(s.getDate()-29);setStart(iso(s));setEnd(iso(today));return}
+    if(kind==="month"){setStart(iso(new Date(today.getFullYear(),today.getMonth(),1)));setEnd(iso(new Date(today.getFullYear(),today.getMonth()+1,0)));return}
+    if(kind==="lastmonth"){setStart(iso(new Date(today.getFullYear(),today.getMonth()-1,1)));setEnd(iso(new Date(today.getFullYear(),today.getMonth(),0)));return}
+    setStart("");setEnd("");
+  }
 
   async function load(targetPage = page, targetProductPage = productPage) {
     setLoading(true); setError("");
@@ -56,25 +69,41 @@ export default function DatabaseCenter({ workspaceId }: Props) {
 
   function requestDelete(row:Row){
     setDeleteTarget(row);
-    setDeleteStep("confirm");
-    setVerifyCode("");
-    setVerifyInput("");
     setError("");
   }
-  function beginDeleteVerification(){
-    setVerifyCode(String(Math.floor(100+Math.random()*900)));
-    setVerifyInput("");
-    setDeleteStep("verify");
+
+  const visibleImports=useMemo(()=>data.imports||[],[data.imports]);
+  const allSelected=visibleImports.length>0&&visibleImports.every((x:Row)=>selectedIds.includes(String(x.import_id)));
+  function toggleRow(id:string){setSelectedIds(prev=>prev.includes(id)?prev.filter(x=>x!==id):[...prev,id])}
+  function toggleAll(){setSelectedIds(allSelected?[]:visibleImports.map((x:Row)=>String(x.import_id)))}
+
+  async function bulkDelete(){
+    const ids=selectedIds.filter(Boolean);
+    if(!ids.length)return;
+    setBulkBusy(true);setError("");
+    let removed=0;const failed:string[]=[];
+    for(const importId of ids){
+      try{
+        const r=await fetch("/api/database/import",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({workspace_id:workspaceId,import_id:importId})});
+        const d=await r.json();
+        if(!r.ok||!d.ok)throw new Error(d.error||"Gagal menghapus import.");
+        removed++;
+      }catch{ failed.push(importId); }
+    }
+    setSelectedIds([]);
+    setBulkBusy(false);
+    await load(1,1);
+    window.dispatchEvent(new CustomEvent("lumaway-database-updated",{detail:{deleted_import_ids:ids}}));
+    setError(failed.length?`${removed} import dihapus, ${failed.length} gagal.`:"");
   }
   async function confirmDelete(){
     if(!deleteTarget)return;
-    if(verifyInput!==verifyCode){setError("Kode persetujuan tidak sesuai.");return}
     setDeleteBusy(true);setError("");
     try{
       const r=await fetch("/api/database/import",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({workspace_id:workspaceId,import_id:deleteTarget.import_id})});
       const d=await r.json();
       if(!r.ok||!d.ok)throw new Error(d.error||"Gagal menghapus import.");
-      setDeleteTarget(null);setDeleteStep("confirm");setVerifyInput("");setVerifyCode("");
+      setDeleteTarget(null);
       await load(1,1);
       window.dispatchEvent(new CustomEvent("lumaway-database-updated",{detail:{deleted_import_id:d.import_id}}));
     }catch(e:any){setError(e?.message||"Gagal menghapus import.")}finally{setDeleteBusy(false)}
@@ -82,13 +111,13 @@ export default function DatabaseCenter({ workspaceId }: Props) {
 
   return <section id="database" className="legacy-page-anchor">
     <div className="page-head"><div><div className="eyebrow">DATABASE</div><h1>Database</h1><p className="muted">Upload history, Latest Sales / Performance affiliate, dan Latest Product Performance dipisahkan agar data creator dan produk tidak tercampur.</p></div></div>
-    <div className="card"><div className="section-head"><div><h3>Upload / Import History</h3><p className="muted">50 import terbaru.</p></div><button className="secondary" onClick={() => load(1,1)}>Refresh</button></div><div className="scroll"><table><thead><tr>{[["import_id","Import ID"],["filename","File"],["data_type","Type"],["platform","Platform"],["start_date","Period"],["rows_imported","Rows"],["status","Status"],["imported_at","Imported"]].map(([key,label])=><th key={key}><button className="table-sort" onClick={()=>toggleImportSort(key)}>{label}<span>{importSort.key===key?(importSort.asc?"↑":"↓"):"↕"}</span></button></th>)}<th>Action</th></tr></thead><tbody>
-      {sortedImports.map((x: Row) => <tr key={x.id || x.import_id}><td>{x.import_id}</td><td>{x.filename}</td><td>{x.data_type}</td><td>{x.platform}</td><td>{x.start_date || "-"} → {x.end_date || "-"}</td><td>{Number(x.rows_imported || 0).toLocaleString("id-ID")}</td><td>{x.status}</td><td>{x.imported_at || "-"}</td><td><button className="danger-lite" onClick={()=>requestDelete(x)}>Hapus</button></td></tr>)}
-      {!data.imports?.length && <tr><td colSpan={9}>Belum ada import.</td></tr>}
+    <div className="card"><div className="section-head"><div><h3>Upload / Import History</h3><p className="muted">50 import terbaru. Centang baris lalu klik Hapus terpilih untuk menghapus sekaligus.</p></div><div className="button-row"><button className="secondary" onClick={() => load(1,1)}>Refresh</button><button className="danger-lite" disabled={!selectedIds.length||bulkBusy} onClick={()=>setBulkArmed(true)}>{bulkBusy?"Menghapus...":`Hapus terpilih (${selectedIds.length})`}</button></div></div><div className="scroll"><table><thead><tr><th className="pick-col"><input type="checkbox" aria-label="Pilih semua import" checked={allSelected} onChange={toggleAll}/></th>{[["import_id","Import ID"],["filename","File"],["data_type","Type"],["platform","Platform"],["start_date","Period"],["rows_imported","Rows"],["status","Status"],["imported_at","Imported"]].map(([key,label])=><th key={key}><button className="table-sort" onClick={()=>toggleImportSort(key)}>{label}<span>{importSort.key===key?(importSort.asc?"↑":"↓"):"↕"}</span></button></th>)}<th>Action</th></tr></thead><tbody>
+      {sortedImports.map((x: Row) => <tr key={x.id || x.import_id} className={selectedIds.includes(String(x.import_id))?"is-selected":undefined}><td className="pick-col"><input type="checkbox" aria-label={"Pilih "+x.import_id} checked={selectedIds.includes(String(x.import_id))} onChange={()=>toggleRow(String(x.import_id))}/></td><td>{x.import_id}</td><td>{x.filename}</td><td>{x.data_type}</td><td>{x.platform}</td><td>{x.start_date || "-"} → {x.end_date || "-"}</td><td>{readNumber(x.rows_imported).toLocaleString("id-ID")}</td><td>{x.status}</td><td>{x.imported_at || "-"}</td><td><button className="danger-lite" onClick={()=>requestDelete(x)}>Hapus</button></td></tr>)}
+      {!data.imports?.length && <tr><td colSpan={10}>Belum ada import.</td></tr>}
     </tbody></table></div></div>
     <div className="card">
       <div className="section-head"><div><h3>Latest Sales / Performance</h3><p className="muted">Default: tanggal terbaru lalu creator dengan aktivitas terbesar tampil lebih dulu. Creator tanpa transaksi tetap disimpan dan berada setelah row aktif pada tanggal yang sama.</p></div><span className="role-badge">{Number(data.affiliate_summary?.active_rows || 0).toLocaleString("id-ID")} row aktif</span></div>
-      <div className="filters"><label>Start <span className="field-note">Opsional</span><input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></label><label>End <span className="field-note">Opsional</span><input type="date" value={end} onChange={(e) => setEnd(e.target.value)} /></label><label>Platform<select value={platform} onChange={(e) => setPlatform(e.target.value)}><option value="">All</option><option>TikTok</option><option>Shopee</option><option>Instagram</option></select></label><button onClick={() => load(1,1)} disabled={loading}>{loading ? "Loading..." : "Apply"}</button><button className="secondary" onClick={() => { setStart(""); setEnd(""); setPlatform(""); setPage(1); setProductPage(1); setSalesSort({key:"",asc:false}); setTimeout(() => load(1,1), 0); }}>Reset</button></div>
+      <div className="filters"><label>Periode <select value={datePreset} onChange={(e) => applyPreset(e.target.value)}><option value="">Semua</option><option value="7d">7 hari terakhir</option><option value="30d">30 hari terakhir</option><option value="month">Bulan ini</option><option value="lastmonth">Bulan lalu</option><option value="custom">Rentang khusus</option></select></label><label>Start <span className="field-note">Opsional</span><input type="date" value={start} onChange={(e) => { setDatePreset("custom"); setStart(e.target.value); }} /></label><label>End <span className="field-note">Opsional</span><input type="date" value={end} onChange={(e) => { setDatePreset("custom"); setEnd(e.target.value); }} /></label><label>Platform<select value={platform} onChange={(e) => setPlatform(e.target.value)}><option value="">All</option><option>TikTok</option><option>Shopee</option><option>Instagram</option></select></label><button onClick={() => load(1,1)} disabled={loading}>{loading ? "Loading..." : "Apply"}</button><button className="secondary" onClick={() => { setDatePreset(""); setStart(""); setEnd(""); setPlatform(""); setPage(1); setProductPage(1); setSalesSort({key:"",asc:false}); setTimeout(() => load(1,1), 0); }}>Reset</button></div>
       {error && <div className="flash error">{error}</div>}
       <div className="kpis database-affiliate-summary">
         <div className="kpi"><small>Total Row</small><b>{Number(data.affiliate_summary?.total_rows || 0).toLocaleString("id-ID")}</b></div>
@@ -116,19 +145,18 @@ export default function DatabaseCenter({ workspaceId }: Props) {
     </div>
     {deleteTarget&&<div className="confirm-overlay" onMouseDown={e=>{if(e.target===e.currentTarget&&!deleteBusy)setDeleteTarget(null)}}>
       <div className="confirm-card">
-        {deleteStep==="confirm"?<>
-          <h3>Hapus data import?</h3>
-          <p>Anda yakin untuk hapus <b>{deleteTarget.filename}</b>?</p>
-          <div className="confirm-warning">Data database yang berasal dari import ini akan ikut dihapus. Tindakan ini tidak dapat dibatalkan.</div>
-          <div className="button-row"><button className="secondary" disabled={deleteBusy} onClick={()=>setDeleteTarget(null)}>TIDAK</button><button className="danger" disabled={deleteBusy} onClick={beginDeleteVerification}>YA</button></div>
-        </>:<>
-          <h3>Verifikasi persetujuan</h3>
-          <p>Masukkan kode 3 angka berikut untuk menyetujui penghapusan <b>{deleteTarget.filename}</b>.</p>
-          <label>Kode persetujuan <strong className="verify-code">{verifyCode}</strong>
-            <input inputMode="numeric" maxLength={3} autoFocus value={verifyInput} onChange={e=>setVerifyInput(e.target.value.replace(/\D/g,"").slice(0,3))} placeholder="Masukkan 3 angka"/>
-          </label>
-          <div className="button-row"><button className="secondary" disabled={deleteBusy} onClick={()=>setDeleteStep("confirm")}>KEMBALI</button><button className="danger" disabled={deleteBusy||verifyInput!==verifyCode} onClick={()=>void confirmDelete()}>{deleteBusy?"Menghapus...":"HAPUS"}</button></div>
-        </>}
+        <h3>Hapus data import?</h3>
+        <p>Anda yakin untuk hapus <b>{deleteTarget.filename}</b>?</p>
+        <div className="confirm-warning">Data database yang berasal dari import ini akan ikut dihapus. Tindakan ini tidak dapat dibatalkan.</div>
+        <div className="button-row"><button className="secondary" disabled={deleteBusy} onClick={()=>setDeleteTarget(null)}>TIDAK</button><button className="danger" disabled={deleteBusy} onClick={()=>void confirmDelete()}>{deleteBusy?"Menghapus...":"YA"}</button></div>
+      </div>
+    </div>}
+    {bulkArmed&&<div className="confirm-overlay" onMouseDown={e=>{if(e.target===e.currentTarget&&!bulkBusy)setBulkArmed(false)}}>
+      <div className="confirm-card">
+        <h3>Hapus {selectedIds.length} import?</h3>
+        <p>Data database yang berasal dari import terpilih akan ikut dihapus. Tindakan ini tidak dapat dibatalkan.</p>
+        <div className="confirm-warning">{selectedIds.slice(0,8).join(", ")}{selectedIds.length>8?` dan ${selectedIds.length-8} lainnya`:""}</div>
+        <div className="button-row"><button className="secondary" disabled={bulkBusy} onClick={()=>setBulkArmed(false)}>TIDAK</button><button className="danger" disabled={bulkBusy} onClick={()=>{setBulkArmed(false);void bulkDelete()}}>{bulkBusy?"Menghapus...":"YA"}</button></div>
       </div>
     </div>}
   </section>;
