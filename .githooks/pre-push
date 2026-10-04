@@ -1,0 +1,29 @@
+#!/bin/sh
+# Pre-push gate. Runs the offline static checks only: no network, no dev server,
+# no Supabase calls. Those live in scripts/pre-push-check.mjs and run manually via
+# `npm run verify:prepush` because they need a running app and would otherwise
+# create/delete throwaway accounts on every push.
+#
+# Set SKIP_VERIFY=1 to bypass (e.g. reverting a bad commit).
+set -e
+
+if [ "$SKIP_VERIFY" = "1" ]; then
+  echo "pre-push: SKIP_VERIFY=1, checks skipped"
+  exit 0
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-push: validating migrations"
+npm run --silent check:migrations
+
+echo "pre-push: validating routes"
+npm run --silent check:routes
+
+echo "pre-push: validating public asset paths"
+npm run --silent check:assets
+
+echo "pre-push: typecheck"
+npm run --silent typecheck
+
+echo "pre-push: OK"

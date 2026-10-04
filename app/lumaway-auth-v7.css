@@ -14,10 +14,13 @@
 .auth-v7-slide-copy>span{display:inline-flex;align-items:center;min-height:26px;padding:5px 9px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:rgba(9,18,42,.20);backdrop-filter:blur(8px);font-size:11px;font-weight:800;letter-spacing:.12em}
 .auth-v7-slide-copy h2{margin:14px 0 8px;max-width:620px;font-size:clamp(32px,4vw,56px);line-height:1.02;letter-spacing:-.045em}
 .auth-v7-slide-copy p{max-width:580px;margin:0;color:rgba(255,255,255,.82);font-size:15px;line-height:1.65}
-.auth-v7-dots{position:absolute;z-index:20;left:34px;bottom:28px;display:flex;gap:7px}
+.auth-v7-dots{position:absolute;z-index:20;left:34px;bottom:28px;display:flex;gap:24px}
 .auth-v7-dots button{position:relative;width:8px;height:8px;padding:0;border:0;border-radius:999px;background:rgba(255,255,255,.42);cursor:pointer;transition:width .2s ease,background .2s ease}
 .auth-v7-dots button.active{width:28px;background:#fff}
-/* The 8x8px pill is far too small to tap reliably; expand only the hit area. */
+/* The 8x8px pill is far too small to tap reliably; expand only the hit area.
+   24px is the WCAG 2.2 SC 2.5.8 minimum, and the 24px gap above keeps adjacent
+   hit areas from overlapping (at the old 15px pitch they intersected, so the
+   spacing exception did not apply). */
 .auth-v7-dots button::before{content:"";position:absolute;inset:-13px -7px}
 
 .auth-v7-panel{display:flex;align-items:center;justify-content:center;padding:42px 56px;background:#fff}

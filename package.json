@@ -9,7 +9,23 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "check:migrations": "node scripts/lumaway-db-migration-check.mjs",
+    "check:routes": "node scripts/lumaway-route-check.mjs",
+    "check:assets": "node scripts/check-public-assets.mjs",
+    "check:smoke": "node scripts/lumaway-http-smoke.mjs",
+    "check:load": "node scripts/lumaway-load-test.mjs",
+    "verify": "npm run check:migrations && npm run check:routes && npm run check:assets && npm run typecheck",
+    "verify:prepush": "node scripts/pre-push-check.mjs",
+    "setup:hooks": "git config core.hooksPath .githooks",
+    "audit:auth": "node scripts/audit-auth.mjs",
+    "audit:sidebar": "node scripts/audit-sidebar.mjs",
+    "shoot:auth": "node scripts/shoot-auth.mjs",
+    "shoot:dashboard": "node scripts/shoot-dashboard.mjs",
+    "shoot:flow": "node scripts/shoot-flow.mjs",
+    "shoot:workspace": "node scripts/shoot-workspace.mjs",
+    "walk:new-user": "node scripts/walk-new-user.mjs"
   },
   "devDependencies": {
     "@types/node": "26.5.0",

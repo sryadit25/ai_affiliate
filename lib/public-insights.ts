@@ -154,8 +154,9 @@ export const PUBLIC_SITE_ORIGIN="https://www.lumaway.online";
 // Blog cover images are stored in the database as absolute URLs built against the
 // production host, which 404s during local development. Rewriting the origin to
 // the current host lets the same rows serve local and deployed environments.
+// Both hosts appear in stored rows: the public site and the app subdomain.
 // ponytail: string matching rather than a migration; if covers ever move off
 // lumaway.online this stops matching and the original URL is returned as-is.
 export function localizePublicAsset(url:string){
-  return url.replace(/https?:\/\/(www\.)?lumaway\.online/i,"");
+  return url.replace(/https?:\/\/([a-z0-9-]+\.)*lumaway\.online/i,"");
 }
