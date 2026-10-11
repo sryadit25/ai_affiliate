@@ -32,7 +32,6 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules",
-    "apps/marketing"
+    "node_modules"
   ]
 }

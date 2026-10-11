@@ -1,2 +1,0 @@
-import {ButtonLink} from '@/components/ui';
-export default function NotFound(){return <section className="container section"><span className="eyebrow">404 / HALAMAN TIDAK DITEMUKAN</span><h1 style={{fontSize:44,margin:'20px 0'}}>Mari kembali ke arah yang tepat.</h1><p style={{marginBottom:28}}>Halaman ini belum tersedia atau alamatnya telah berubah.</p><ButtonLink href="/home">Kembali ke beranda</ButtonLink></section>}
