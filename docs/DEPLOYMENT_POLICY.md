@@ -1,8 +1,8 @@
 # Lumaway Production Deployment Policy
 
-PR39 changes the release flow so incomplete commits are no longer pushed directly to production one-by-one.
+Manual deploy only. Vercel Git auto-deploy is disabled (`deploymentEnabled.main: false` in `vercel.json`, no `ignoreCommand`). Push to `main` never triggers production by itself.
 
-## Required flow
+## Required flow (manual)
 
 1. Create a feature / fix branch from `main`.
 2. Commit all work to that branch only.
@@ -13,15 +13,18 @@ PR39 changes the release flow so incomplete commits are no longer pushed directl
    - production build
    - HTTP smoke test
 5. Squash-merge the Pull Request to `main`.
-6. Vercel receives one tested production commit instead of every intermediate commit.
+6. From `ai_affiliate/`, run manual deploy: `npx vercel link` (once, project `ai-lumaway`), then `npx vercel --prod`.
+7. Verify production: fetch `https://app.lumaway.online/sw.js` (expect `lumaway-shell-v5`), hard-reload `Ctrl+Shift+R`, confirm Service Workers version.
 
 ## Important
 
 - Do not use `main` as a working branch.
-- Red Vercel deployments from older commits are historical records and are not changed by later successful deployments.
-- A production release is considered valid only when the final `main` commit has both CI and Vercel success statuses.
+- Always run `npx vercel --prod` from `ai_affiliate/` (never from the parent `project/` folder) and link project `ai-lumaway`, not `lumaway-marketing`.
+- A production release is valid only after manual `npx vercel --prod` succeeds and `sw.js` verification passes.
 - When a build fails on a PR branch, fix the branch and rerun CI before merging. Do not patch the failure directly on `main`.
 
 ## PR39 objective
 
 This policy prevents the PR38 pattern where several partial commits were sent to Vercel before all dependent files were present and before build errors had been fixed.
+
+Manual-deploy update: Git auto-deploy is now fully disabled. The PR39 PR-flow above stays, but the final production step is always an explicit `npx vercel --prod` from `ai_affiliate/` — never an automatic push-triggered deployment.
