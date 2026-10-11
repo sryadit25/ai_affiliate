@@ -467,12 +467,18 @@
   border: 1px solid var(--lh-rule);
   border-radius: var(--lh-radius-md);
   overflow: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
   box-shadow: var(--lh-shadow-xs);
 }
 
 .listing-v2-table-wrap table {
   width: 100%;
-  border-collapse: collapse;
+  min-width: 1120px;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--lh-text-sm);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -709,6 +715,25 @@
   background: var(--lh-danger);
   color: #fff;
 }
+
+/* ── Action column: never clipped, always reachable ──
+   Root cause L42-43: tbody td max-width:200px + overflow:hidden memotong
+   .listing-v2-actions (nowrap, min-width 230px+), sehingga scroll mentok
+   tetap tidak bisa ke kanan. Kolom terakhir dibuat sticky kanan. */
+.listing-v2-actions { flex-wrap: nowrap; min-width: max-content; }
+.listing-v2-table-wrap thead th:last-child,
+.listing-v2-table-wrap tbody td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 3;
+  max-width: none;
+  overflow: visible;
+  background: var(--lh-paper);
+  box-shadow: -1px 0 0 var(--lh-rule);
+}
+.listing-v2-table-wrap thead th:last-child { z-index: 4; background: var(--lh-paper-2); }
+.listing-v2-table-wrap tbody tr:hover td:last-child { background: var(--lh-paper-2); }
+.listing-v2-table-wrap tbody tr.selected td:last-child { background: var(--lh-accent-soft); }
 
 /* ── Detail aside panel ── */
 .listing-v2-detail {
