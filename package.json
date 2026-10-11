@@ -21,6 +21,8 @@
     "verify": "npm run check:migrations && npm run check:routes && npm run check:assets && npm run check:numeric && npm run typecheck",
     "verify:prepush": "node scripts/pre-push-check.mjs",
     "setup:hooks": "git config core.hooksPath .githooks",
+    "fork:setup": "node scripts/fork-setup.mjs",
+    "backup": "node scripts/backup-to-fork.mjs",
     "audit:auth": "node scripts/audit-auth.mjs",
     "audit:sidebar": "node scripts/audit-sidebar.mjs",
     "shoot:auth": "node scripts/shoot-auth.mjs",
