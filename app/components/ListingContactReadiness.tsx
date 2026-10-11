@@ -9,7 +9,13 @@ export default function ListingContactReadiness({workspaceId}:{workspaceId:strin
  async function load(){
   setLoading(true);
   const x=await supabase.rpc("luma_listing_contact_readiness_v1",{p_workspace_id:workspaceId});
-  if(x.error){setError(x.error.message);setData({})}else{setError("");setData(x.data||{})}
+  if(x.error){
+   const errCode=String((x.error as any)?.code||"");
+   const errMsg=String(x.error.message||"");
+   const missing=errCode==="42883"||errCode==="42P01"||errCode==="PGRST202"||errCode==="PGRST205"||/does not exist|schema cache|function .* not/i.test(errMsg);
+   setError(missing?"Ringkasan kesiapan kontak belum tersedia di database. Minta admin menjalankan supabase/PR88_CHANNEL_CONTACTS_APPLY_READY.sql di SQL Editor, lalu klik Refresh.":x.error.message);
+   setData({});
+  }else{setError("");setData(x.data||{})}
   setLoading(false);
  }
  useEffect(()=>{void load();const fn=()=>void load();window.addEventListener("lumaway-database-updated",fn);return()=>window.removeEventListener("lumaway-database-updated",fn)},[workspaceId]);
@@ -17,8 +23,8 @@ export default function ListingContactReadiness({workspaceId}:{workspaceId:strin
  const s=data.summary||{},blocked=data.blocked||[];
  return <section className="listing-contact-readiness">
   <header><div><span>CONTACT READINESS</span><h3>Kesiapan follow-up creator</h3><p>Cek apakah WhatsApp atau social account yang dibutuhkan sudah tersedia sebelum follow-up jatuh tempo.</p></div><button onClick={()=>void load()}>Refresh</button></header>
-  {error&&<div className="listing-v2-alert error">{error}</div>}
-  {loading?<div className="listing-v2-empty small">Memeriksa contact data...</div>:<>
+  {error&&<div className="listing-v2-alert error" role="alert">{error}</div>}
+  {loading?<div className="listing-v2-empty small" role="status">Memeriksa contact data…</div>:<>
    <div className="lcr-summary">
     <article><span>Total Listing</span><strong>{Number(s.total||0).toLocaleString("id-ID")}</strong></article>
     <article><span>WhatsApp Ready</span><strong>{Number(s.whatsapp_ready||0).toLocaleString("id-ID")}</strong></article>

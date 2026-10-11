@@ -129,6 +129,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
   const [contactEditingId,setContactEditingId]=useState<number|null>(null);
   const [contactFormOpen,setContactFormOpen]=useState(false);
   const [contactDraft,setContactDraft]=useState({channel:"WhatsApp",phone:"",handle:"",url:"",note:"",is_primary:true});
+  const [channelContactsMissing,setChannelContactsMissing]=useState(false);
 
   async function loadData(){
     setLoading(true);setError("");
@@ -150,7 +151,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     if(!productResult.error)setProducts((productResult.data||[]) as Product[]);
     if(!agreementsResult.error)setAgreements((agreementsResult.data||[]) as typeof agreements);
     if(!programsResult.error)setSupportPrograms((programsResult.data||[]) as typeof supportPrograms);
-    if(!channelContactResult.error)setChannelContacts((channelContactResult.data||[]) as ChannelContact[]);
+    if(!channelContactResult.error){setChannelContacts((channelContactResult.data||[]) as ChannelContact[]);setChannelContactsMissing(false)}else{const errCode=String(channelContactResult.error.code||"");const errMsg=String(channelContactResult.error.message||"");setChannelContactsMissing(errCode==="PGRST205"||errCode==="42P01"||/does not exist|schema cache|table .* not/i.test(errMsg))}
     if(!safeOwnerResult.error)setFollowupOwners((safeOwnerResult.data||[]).map((x:any)=>({id:String(x.user_id),safe_label:String(x.safe_label||"PIC"),is_self:Boolean(x.is_self)})));
     // Daftar kanal follow-up berasal dari database (luma_channel_contacts). Bila tabel belum ada, pakai daftar bawaan.
     if(!channelContactResult.error){
@@ -229,12 +230,12 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     const payload={workspace_id:workspaceId,creator_id:selectedCreator.id,channel:input.channel.trim(),phone:input.phone.trim()||null,handle:input.handle.trim()||null,url:input.url.trim()||null,note:input.note.trim()||null,is_primary:input.is_primary,updated_at:now};
     if(input.is_primary){
       const clearPrimary=await supabase.from("luma_channel_contacts").update({is_primary:false,updated_at:now}).eq("workspace_id",workspaceId).eq("creator_id",selectedCreator.id).eq("channel",input.channel.trim()).neq("id",input.id||0);
-      if(clearPrimary.error){setSaving(false);setError(clearPrimary.error.message);return}
+      if(clearPrimary.error){setSaving(false);const errCode=String(clearPrimary.error.code||"");setError(errCode==="PGRST205"||errCode==="42P01"?"Tabel kontak channel belum tersedia di database. Minta admin menjalankan supabase/PR88_CHANNEL_CONTACTS_APPLY_READY.sql di SQL Editor, lalu coba lagi.":clearPrimary.error.message);return}
     }
     const result=input.id
       ?await supabase.from("luma_channel_contacts").update(payload).eq("id",input.id).eq("workspace_id",workspaceId).select("id,creator_id,channel,phone,handle,url,note,is_primary").single()
       :await supabase.from("luma_channel_contacts").insert({...payload,created_by:(await supabase.auth.getUser()).data.user?.id||null}).select("id,creator_id,channel,phone,handle,url,note,is_primary").single();
-    if(result.error){setSaving(false);setError(result.error.message);return}
+    if(result.error){setSaving(false);const errCode=String(result.error.code||"");setError(errCode==="PGRST205"||errCode==="42P01"?"Tabel kontak channel belum tersedia di database. Minta admin menjalankan supabase/PR88_CHANNEL_CONTACTS_APPLY_READY.sql di SQL Editor, lalu coba lagi.":result.error.message);return}
     const saved=result.data as ChannelContact;
     setChannelContacts(prev=>{
       const next=input.id?prev.map(item=>item.id===input.id?(input.is_primary?{...saved}:saved):item):[saved,...prev];
@@ -247,7 +248,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
   async function deleteChannelContact(id:number){
     if(!window.confirm("Hapus kontak channel ini?"))return;
     const result=await supabase.from("luma_channel_contacts").delete().eq("id",id).eq("workspace_id",workspaceId);
-    if(result.error){setError(result.error.message);return}
+    if(result.error){const errCode=String(result.error.code||"");setError(errCode==="PGRST205"||errCode==="42P01"?"Tabel kontak channel belum tersedia di database. Minta admin menjalankan supabase/PR88_CHANNEL_CONTACTS_APPLY_READY.sql di SQL Editor, lalu coba lagi.":result.error.message);return}
     setChannelContacts(prev=>prev.filter(item=>item.id!==id));setMessage("Kontak channel dihapus.");
   }
 
@@ -546,6 +547,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
 
     {error&&<div className="listing-v2-alert error" role="alert">{error}</div>}
     {message&&<div className="listing-v2-alert success" role="status">{message}</div>}
+    {channelContactsMissing&&<div className="listing-v2-contacts-banner" role="status"><b>Tabel kontak channel belum tersedia di database.</b>Minta admin menjalankan supabase/PR88_CHANNEL_CONTACTS_APPLY_READY.sql di SQL Editor, lalu refresh halaman ini.</div>}
     <ListingContactReadiness workspaceId={workspaceId}/>
     <ListingFollowupQueue workspaceId={workspaceId}/>
     <ListingFollowupCalendar workspaceId={workspaceId}/>
