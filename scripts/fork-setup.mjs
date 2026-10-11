@@ -2,6 +2,7 @@
 // wire it up as the `backup` remote. Requires GitHub CLI (`gh`) to be logged in
 // (`gh auth login`). Never changes the existing `origin` remote.
 import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
 
 const UPSTREAM = process.env.UPSTREAM_REPO || "totemocreativestudio/ai_affiliate";
 const REMOTE = process.env.BACKUP_REMOTE || "backup";
@@ -10,8 +11,12 @@ function git(args) {
   return execFileSync("git", args, { encoding: "utf8" }).trim();
 }
 
+// Selalu jalankan dari direktori netral: `gh repo fork` yang dipanggil di dalam
+// sebuah repo akan meng-rename `origin` -> `upstream` dan memasang fork sebagai
+// `origin`. Kita tidak mau itu; remote lokal harus utuh.
+const NEUTRAL = tmpdir();
 const gh = (args) =>
-  execFileSync("gh", args, { encoding: "utf8" }).trim();
+  execFileSync("gh", args, { encoding: "utf8", cwd: NEUTRAL }).trim();
 
 // 0. Pastikan sudah login.
 let whoami;
@@ -27,7 +32,7 @@ console.log(`fork:setup: login sebagai '${whoami}'`);
 // 1. Buat fork (idempoten: kalau sudah ada, gh hanya mengembalikan fork itu).
 console.log(`fork:setup: membuat/menemukan fork dari ${UPSTREAM} ...`);
 try {
-  gh(["repo", "fork", UPSTREAM, "--clone=false", "--remote=false"]);
+  gh(["repo", "fork", UPSTREAM, "--clone=false"]);
 } catch (err) {
   const msg = (err.stderr || err.message || "").toString();
   // "already exists" bukan error fatal.
@@ -40,7 +45,7 @@ try {
 
 let forkUrl;
 try {
-  forkUrl = gh(["repo", "view", `${whoami}/ai_affiliate`, "--json", "sshUrl", "--jq", ".sshUrl"]);
+  forkUrl = gh(["repo", "view", `${whoami}/ai_affiliate`, "--json", "url", "--jq", ".url"]);
 } catch {
   forkUrl = `https://github.com/${whoami}/ai_affiliate.git`;
 }
