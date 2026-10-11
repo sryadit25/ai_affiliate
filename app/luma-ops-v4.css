@@ -183,7 +183,16 @@
 
 
 /* -------- PR75A Listings Experience V2 -------- */
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: Cobalt (existing workbench UI) */
 .listing-v2-page{margin-top:24px;padding:18px;border:1px solid #e4e7ec;border-radius:16px;background:#fff;box-shadow:0 8px 28px rgba(16,24,40,.035)}
+/* PR88C a11y: focus terlihat untuk semua kontrol listing (guidelines Focus States). */
+.listing-v2-page button:focus-visible,.listing-v2-page a:focus-visible,.listing-v2-page input:focus-visible,.listing-v2-page select:focus-visible,.listing-v2-page textarea:focus-visible,.listing-v2-page summary:focus-visible{outline:2px solid #5268d7;outline-offset:2px}
+.listing-v2-stats b{font-variant-numeric:tabular-nums}
+.listing-v2-creator-cell b,.listing-v2-profile h3,.listing-v2-profile p{overflow-wrap:anywhere;min-width:0}
+.listing-v2-search-label{display:grid;gap:4px;flex:2 1 240px;min-width:0}
+.listing-v2-search-label>span{color:#566174;font-size:8.5px;font-weight:750}
+.listing-v2-search-label>input{width:100%;min-width:0}
+@media(prefers-reduced-motion:reduce){.listing-v2-table-wrap tbody tr{transition:none}.listing-v2-modal-backdrop{backdrop-filter:none}}/* Hallmark · pre-emit critique: P5 H4 E5 S4 R5 V4 */
 .listing-v2-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:14px}
 .listing-v2-header>div>span,.listing-v2-editor-head>div>span,.listing-v2-modal header span{color:#5c6bd0;font-size:7.5px;font-weight:850;letter-spacing:.14em}
 .listing-v2-header h2{margin:4px 0 5px;font-size:24px;letter-spacing:-.03em}.listing-v2-header p{margin:0;color:#667085;font-size:10.5px;line-height:1.5}

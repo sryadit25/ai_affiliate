@@ -99,7 +99,7 @@ export function CreatorAutocomplete({
       autoComplete="off"
     />
     {!disabled&&!selectedId&&typed&&(loading||results.length>0||Boolean(error)||typed.length>=2)&&<div className="smart-autocomplete-menu" role="listbox">
-      {loading&&<div className="smart-autocomplete-empty">Mencari creator dari Master Data...</div>}
+      {loading&&<div className="smart-autocomplete-empty" role="status">Mencari creator dari Master Data…</div>}
       {!loading&&error&&<div className="smart-autocomplete-empty" role="alert">{error}</div>}
       {!loading&&results.map((creator:CreatorSearchResult)=>{
         const name=String(creator.name||"").trim();
@@ -112,7 +112,7 @@ export function CreatorAutocomplete({
       })}
       {!loading&&!error&&!results.length&&<div className="smart-autocomplete-empty">Creator tidak ditemukan. Periksa nama atau username.</div>}
     </div>}
-    {creating&&<small className="field-note">Menyimpan creator baru...</small>}
+    {creating&&<small className="field-note" role="status">Menyimpan creator baru…</small>}
     {!creating&&createMessage&&<small className="field-note">{createMessage}</small>}
   </div>;
 }
@@ -124,7 +124,7 @@ export function ProductAutocomplete({
   return <div className="smart-autocomplete">
     <input disabled={disabled} value={value} onChange={e=>onTextChange(e.target.value)} placeholder={placeholder} autoComplete="off"/>
     {!disabled&&!selectedId&&value.trim()&&<div className="smart-autocomplete-menu" role="listbox">
-      {loading&&<div className="smart-autocomplete-empty">Mencari produk...</div>}
+      {loading&&<div className="smart-autocomplete-empty" role="status">Mencari produk…</div>}
       {!loading&&results.map((p:ProductSearchResult)=><button type="button" key={p.id} onMouseDown={e=>{e.preventDefault();onSelect(p);setResults([])}}>
         <strong>{p.sku}</strong>
         <span>{p.product_name||"-"} · HPP Rp {Number(p.cost_price||0).toLocaleString("id-ID")}</span>

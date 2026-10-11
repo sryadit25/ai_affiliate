@@ -112,27 +112,27 @@ export default function ListingQuickMessage({workspaceId,listing,creatorUsername
   </header>
 
   <div className="lqm-controls">
-   <select value={channel} onChange={e=>{setChannel(e.target.value);setSelectedId("")}}>{CHANNELS.map(x=><option key={x}>{x}</option>)}</select>
-   <select value={stage} onChange={e=>{setStage(e.target.value);setSelectedId("")}}>{STAGES.filter(Boolean).map(x=><option key={x}>{x}</option>)}</select>
-   <select value={selectedId||String(selected?.id||"")} onChange={e=>setSelectedId(e.target.value)}><option value="">Pilih template</option>{filtered.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>
+   <select value={channel} aria-label="Channel pesan" onChange={e=>{setChannel(e.target.value);setSelectedId("")}}>{CHANNELS.map(x=><option key={x}>{x}</option>)}</select>
+   <select value={stage} aria-label="Stage pesan" onChange={e=>{setStage(e.target.value);setSelectedId("")}}>{STAGES.filter(Boolean).map(x=><option key={x}>{x}</option>)}</select>
+   <select value={selectedId||String(selected?.id||"")} aria-label="Pilih template pesan" onChange={e=>setSelectedId(e.target.value)}><option value="">Pilih template</option>{filtered.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</select>
   </div>
 
   <div className="lqm-ai-bar">
    <div><span>AI FOLLOW UP</span><small>{aiMode==="first_contact"?"Sambutan Pertama":aiMode==="follow_up"?"Berdasarkan "+aiHistoryCount+" aktivitas sebelumnya":"Gunakan tindakan/history sebelumnya sebagai konteks"}</small></div>
-   <button disabled={aiBusy} onClick={()=>void generate()}>{aiBusy?"Menyusun...":"Generate dari History"}</button>
+   <button disabled={aiBusy} onClick={()=>void generate()}>{aiBusy?"Menyusun…":"Generate dari History"}</button>
   </div>
 
   {aiDraft?
    <div className="lqm-ai-draft">
     <div><span>{aiMode==="first_contact"?"SAMBUTAN PERTAMA":"FOLLOW UP HISTORY"}</span><button onClick={()=>setAiDraft("")}>Gunakan Template</button></div>
-    <textarea rows={7} value={aiDraft} onChange={e=>setAiDraft(e.target.value)}/>
+    <textarea rows={7} value={aiDraft} aria-label="Draft pesan follow-up" onChange={e=>setAiDraft(e.target.value)}/>
     {aiNote&&<small>{aiNote}</small>}
    </div>
    :selected?
    <div className="lqm-preview"><span>PREVIEW TEMPLATE</span><p>{preview}</p></div>
    :<div className="lqm-empty">Belum ada template. Anda tetap bisa memilih Generate dari History.</div>}
 
-  <div className="lqm-extra"><label><span>TAMBAHAN KOMENTAR</span><textarea rows={2} value={customComment} onChange={e=>setCustomComment(e.target.value)} placeholder="Tambah teks / angka tambahan, mis: kode voucher, nominal, jadwal..."/><small>Komentar ini digabung otomatis ke pesan WhatsApp.</small></label><label><span>NOMOR WA LAIN (OPSIONAL)</span><input value={phoneOverride} onChange={e=>setPhoneOverride(e.target.value)} placeholder="08xx / 62xx - kosongkan untuk pakai nomor creator"/><small>Jika creator belum punya nomor, isi manual di sini.</small></label></div>
+  <div className="lqm-extra"><label><span>TAMBAHAN KOMENTAR</span><textarea rows={2} value={customComment} onChange={e=>setCustomComment(e.target.value)} placeholder="Tambah teks / angka tambahan, mis: kode voucher, nominal, jadwal…" autoComplete="off" spellCheck={false}/><small>Komentar ini digabung otomatis ke pesan WhatsApp.</small></label><label><span>NOMOR WA LAIN (OPSIONAL)</span><input value={phoneOverride} onChange={e=>setPhoneOverride(e.target.value)} placeholder="08xx / 62xx — kosongkan untuk pakai nomor creator…" inputMode="tel" autoComplete="tel" spellCheck={false}/><small>Jika creator belum punya nomor, isi manual di sini.</small></label></div>
    <div className="lqm-actions">
    <small>{aiDraft?"Draft dapat diedit sebelum dikirim.":selected?selected.name+" · "+selected.channel+(selected.stage?" · "+selected.stage:""):"Review pesan sebelum menghubungi creator."}</small>
    <div>
@@ -141,14 +141,14 @@ export default function ListingQuickMessage({workspaceId,listing,creatorUsername
    </div>
   </div>
 
-  {msg&&<div className="lqm-msg">{msg}</div>}
+  {msg&&<div className="lqm-msg" role="status">{msg}</div>}
 
   {editing&&<div className="lqm-modal"><div>
-   <header><h4>Tambah Template</h4><button onClick={()=>setEditing(false)}>×</button></header>
+   <header><h4>Tambah Template</h4><button type="button" aria-label="Tutup tambah template" onClick={()=>setEditing(false)}>×</button></header>
    <label>Nama<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Contoh: Follow Up Sample"/></label>
    <label>Channel<select value={form.channel} onChange={e=>setForm({...form,channel:e.target.value})}>{CHANNELS.map(x=><option key={x}>{x}</option>)}</select></label>
    <label>Stage<select value={form.stage} onChange={e=>setForm({...form,stage:e.target.value})}>{STAGES.map(x=><option key={x||"all"} value={x}>{x||"Semua Stage"}</option>)}</select></label>
-   <label>Isi Pesan<textarea rows={7} value={form.body} onChange={e=>setForm({...form,body:e.target.value})} placeholder={"Halo {{creator_name}}, follow up untuk {{product_name}}..."}/><small>Variables: creator_name, creator_username, product_name, sku, next_action, follow_up_date, pic_name</small></label>
+   <label>Isi Pesan<textarea rows={7} value={form.body} onChange={e=>setForm({...form,body:e.target.value})} placeholder={"Halo {{creator_name}}, follow up untuk {{product_name}}…"}/><small>Variables: creator_name, creator_username, product_name, sku, next_action, follow_up_date, pic_name</small></label>
    <footer><button onClick={()=>setEditing(false)}>Batal</button><button className="primary" onClick={()=>void save()}>Simpan Template</button></footer>
   </div></div>}
  </section>

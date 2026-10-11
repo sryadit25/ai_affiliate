@@ -551,12 +551,12 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     <ListingFollowupInsights workspaceId={workspaceId} startDate={dateStart||undefined} endDate={dateEnd||undefined}/>
 
     {showForm&&<section className="listing-v2-editor">
-      <div className="listing-v2-editor-head"><div><span>{editingId?"EDIT LISTING":"NEW LISTING"}</span><h3>{editingId?"Edit Listing":"Tambah Listing"}</h3><p>Creator baru otomatis terhubung ke Master Creator. HPP mengikuti Product Master.</p></div><button onClick={()=>{setShowForm(false);setEditingId(null)}}>×</button></div>
+      <div className="listing-v2-editor-head"><div><span>{editingId?"EDIT LISTING":"NEW LISTING"}</span><h3>{editingId?"Edit Listing":"Tambah Listing"}</h3><p>Creator baru otomatis terhubung ke Master Creator. HPP mengikuti Product Master.</p></div><button type="button" aria-label="Tutup editor listing" onClick={()=>{setShowForm(false);setEditingId(null)}}>×</button></div>
       <div className="listing-v2-form-grid">
         <label><span>Data Date</span><input type="date" value={form.data_date} onChange={e=>updateField("data_date",e.target.value)}/></label>
         <label><span>Creator</span><CreatorAutocomplete workspaceId={workspaceId} value={creatorSearch} selectedId={form.creator_id} createPlatform={form.platform}
           onTextChange={value=>{setCreatorSearch(value);setManualCreatorConfirmed(false);setForm(prev=>({...prev,creator_id:"",creator_name:value}))}}
-          placeholder="Ketik username / nama creator"
+          placeholder="Ketik username / nama creator…"
           onSelect={(creator:CreatorSearchResult)=>{const creatorName=creator.name||creator.username||creator.creator_code||"";setCreators(prev=>prev.some(x=>x.id===creator.id)?prev:[creator as Creator,...prev]);setForm(prev=>({...prev,creator_id:String(creator.id),creator_name:creatorName,platform:creator.platform||prev.platform,ratecard:String(creator.ratecard??prev.ratecard??"")}));setCreatorSearch(creatorName);setManualCreatorConfirmed(false)}}
           onCreate={value=>{setCreatorSearch(value);setManualCreatorConfirmed(true);setForm(prev=>({...prev,creator_id:"",creator_name:value}))}}/>
           {manualCreatorConfirmed&&!form.creator_id&&<small>Creator baru akan dibuat saat listing disimpan.</small>}
@@ -564,16 +564,16 @@ export default function Listings({workspaceId}:{workspaceId:string}){
         <label><span>Platform</span><select value={form.platform} onChange={e=>updateField("platform",e.target.value)}><option value="">Pilih Platform</option><option>TikTok</option><option>Shopee</option><option>Instagram</option><option>YouTube</option><option>Other</option></select></label>
         <label><span>Product / SKU</span><ProductAutocomplete workspaceId={workspaceId} value={productSearch} selectedId={form.product_master_id}
           onTextChange={value=>{setProductSearch(value);setForm(prev=>({...prev,product_master_id:"",product_hpp:"0"}))}}
-          placeholder="Ketik SKU atau nama produk"
+          placeholder="Ketik SKU atau nama produk…"
           onSelect={(product:ProductSearchResult)=>{setProducts(prev=>prev.some(x=>x.id===product.id)?prev:[product as Product,...prev]);setForm(prev=>({...prev,product_master_id:String(product.id),product_hpp:String(product.cost_price||0)}));setProductSearch(`${product.sku}${product.product_name?` - ${product.product_name}`:""}`)}}/>
           {form.product_master_id&&<small>HPP otomatis: {money(form.product_hpp)}</small>}
         </label>
         <label><span>Stage</span><select value={form.stage} onChange={e=>updateField("stage",e.target.value)}>{STAGES.map(x=><option key={x}>{x}</option>)}</select></label>
-        <label><span>Payment Type</span><input value={form.payment_type} onChange={e=>updateField("payment_type",e.target.value)} placeholder="Paid / Barter"/></label>
+        <label><span>Payment Type</span><input value={form.payment_type} onChange={e=>updateField("payment_type",e.target.value)} placeholder="Paid / Barter…"/></label>
         <label><span>Ratecard</span><input type="number" value={form.ratecard} onChange={e=>updateField("ratecard",e.target.value)} placeholder="0"/></label>
         <label><span>Posting Date</span><input type="date" value={form.posting_date} onChange={e=>updateField("posting_date",e.target.value)}/></label>
-        <label className="wide"><span>Post Link / Link Konten <small>· bisa lebih dari 1, satu link per baris</small></span><textarea rows={3} value={form.post_link} onChange={e=>updateField("post_link",e.target.value)} placeholder={"https://tiktok.com/...\nhttps://shopee.co.id/..."}/>{splitPostLinks(form.post_link).length>0&&<small>{splitPostLinks(form.post_link).length} link terdeteksi. Pisahkan dengan baris baru / koma / spasi.</small>}</label>
-        <label><span>Next Action</span><input value={form.next_action} onChange={e=>updateField("next_action",e.target.value)} placeholder="Follow up / kirim brief"/></label>
+        <label className="wide"><span>Post Link / Link Konten <small>· bisa lebih dari 1, satu link per baris</small></span><textarea rows={3} value={form.post_link} onChange={e=>updateField("post_link",e.target.value)} placeholder={"https://tiktok.com/…\nhttps://shopee.co.id/…"} inputMode="url" autoComplete="off" spellCheck={false}/>{splitPostLinks(form.post_link).length>0&&<small>{splitPostLinks(form.post_link).length} link terdeteksi. Pisahkan dengan baris baru / koma / spasi.</small>}</label>
+        <label><span>Next Action</span><input value={form.next_action} onChange={e=>updateField("next_action",e.target.value)} placeholder="Follow up / kirim brief…"/></label>
         <label><span>Follow Up Via</span><select value={form.follow_up_channel} onChange={e=>updateField("follow_up_channel",e.target.value)}><option value="">Pilih channel</option>{channelChoices.map(x=><option key={x}>{x}</option>)}</select><small>Channel utama / terakhir yang dipakai untuk komunikasi creator.</small></label>
         <label><span>Next Follow Up</span><input type="datetime-local" value={form.next_follow_up_at} onChange={e=>updateField("next_follow_up_at",e.target.value)}/><small>Jadwal tindak lanjut berikutnya.</small></label>
         <label><span>Priority</span><select value={form.follow_up_priority} onChange={e=>updateField("follow_up_priority",e.target.value)}><option value="low">Low</option><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></label>
@@ -584,9 +584,9 @@ export default function Listings({workspaceId}:{workspaceId:string}){
         }}><option value="">Tanpa Agreement</option>{agreements.filter(x=>!form.creator_id||x.creator_id===Number(form.creator_id)).map(a=><option value={a.agreement_id||""} key={a.id}>{a.agreement_id} · {a.document_status}</option>)}</select>
         <small>Daftar berasal dari Agreement yang terhubung ke Master Creator.</small></label>
         <label><span>Program Reward / Challenge</span><select value={form.program_id} onChange={e=>updateField("program_id",e.target.value)}><option value="">Belum terhubung</option>{supportPrograms.map(p=><option key={p.id} value={p.id}>{p.program_name} · {p.status}</option>)}</select></label>
-        <label className="wide"><span>Notes</span><textarea rows={3} value={form.notes} onChange={e=>updateField("notes",e.target.value)} placeholder="Catatan listing..."/></label>
+        <label className="wide"><span>Notes</span><textarea rows={3} value={form.notes} onChange={e=>updateField("notes",e.target.value)} placeholder="Catatan listing…"/></label>
       </div>
-      <div className="listing-v2-editor-actions"><button className="secondary" onClick={()=>setShowForm(false)}>Batal</button><button className="primary" disabled={saving} onClick={()=>void saveListing()}>{saving?"Menyimpan...":"Simpan Listing"}</button></div>
+      <div className="listing-v2-editor-actions"><button className="secondary" onClick={()=>setShowForm(false)}>Batal</button><button className="primary" disabled={saving} onClick={()=>void saveListing()}>{saving?"Menyimpan…":"Simpan Listing"}</button></div>
     </section>}
 
     <div className="listing-v2-layout">
@@ -601,7 +601,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
           <input id="listing-date-end" aria-label="Tanggal akhir" type="date" value={dateEnd} onChange={e=>setDateEnd(e.target.value)}/>
           {(search||platformFilter||stageFilter||channelFilter||dateStart||dateEnd)&&<button className="secondary" onClick={()=>{setSearch("");setPlatformFilter("");setStageFilter("");setChannelFilter("");setDateStart("");setDateEnd("")}}>Reset</button>}
         </div>
-        {loading?<div className="listing-v2-empty">Memuat Listings...</div>:visibleRows.length===0?<div className="listing-v2-empty"><b>Belum ada hasil listing.</b><span>Tambahkan listing atau ubah filter pencarian.</span></div>:
+        {loading?<div className="listing-v2-empty" role="status">Memuat Listings…</div>:visibleRows.length===0?<div className="listing-v2-empty"><b>Belum ada hasil listing.</b><span>Tambahkan listing atau ubah filter pencarian.</span></div>:
         <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator</th><th>Platform</th><th>Contact</th><th>No. WhatsApp</th><th>Follow Up Via</th><th>Product / SKU</th><th>Stage</th><th>Ratecard</th><th>Latest / Next</th><th>Action</th></tr></thead><tbody>
           {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)}>
             <td><div className="listing-v2-creator-cell"><span className={rowCreator?.avatar_url?"has-photo":""}>{rowCreator?.avatar_url?<img src={rowCreator.avatar_url} alt="" referrerPolicy="no-referrer"/>:String(row.creator_name||"C").slice(0,1).toUpperCase()}</span><div><b>{row.creator_name||"-"}</b><small>{dateLabel(row.data_date)}</small></div></div></td>
@@ -653,7 +653,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
           {splitPostLinks(selected.post_link).length>0&&<div className="listing-v2-social"><div className="listing-v2-social-head"><div><span>KONTEN / POST LINK</span><h4>{splitPostLinks(selected.post_link).length} link konten</h4></div></div><div className="listing-v2-social-links">{splitPostLinks(selected.post_link).map((url,i)=><a key={i} href={url} target="_blank" rel="noreferrer"><span>Link {i+1}</span><b>↗</b></a>)}</div></div>}
           <div className="listing-v2-detail-actions"><button className="primary" onClick={()=>openActivity(selected,"Follow Up")}>+ Tambah Follow Up</button><button className="secondary" onClick={()=>openEdit(selected)}>Edit Listing</button>{splitPostLinks(selected.post_link).slice(0,1).map((url,i)=><a key={i} href={url} target="_blank" rel="noreferrer">Buka Konten{splitPostLinks(selected.post_link).length>1?` (1/${splitPostLinks(selected.post_link).length})`:""}</a>)}</div>
           <div className="listing-v2-timeline-head"><div><h4>Activity Timeline</h4><p>Riwayat listing, follow up, sample, konten, dan hasil creator.</p></div></div>
-          {detailLoading?<div className="listing-v2-empty small">Memuat timeline...</div>:activities.length===0?<div className="listing-v2-empty small">Belum ada aktivitas.</div>:
+          {detailLoading?<div className="listing-v2-empty small" role="status">Memuat timeline…</div>:activities.length===0?<div className="listing-v2-empty small">Belum ada aktivitas.</div>:
           <div className="listing-v2-timeline">{activities.map(activity=><article key={activity.id}><span className="dot"/><time>{dateLabel(activity.activity_date)}</time><div><b>{activity.activity_type}</b>{activity.follow_up_channel&&<span className="listing-channel-badge timeline">{activity.follow_up_channel}</span>}{activity.result&&<em>{activity.result}</em>}{activity.note&&<p>{activity.note}</p>}</div></article>)}</div>}
         </>}
       </aside>
@@ -662,7 +662,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     <details className="listing-v2-master">
       <summary><div><h3>Master Creator</h3><p>Database creator workspace tetap tersedia untuk pencarian dan pengecekan data master.</p></div><span>{masterCreatorTotal.toLocaleString("id-ID")} creator</span></summary>
       <div className="listing-v2-master-body">
-        <div className="listing-v2-master-search"><input value={masterCreatorSearch} onChange={e=>setMasterCreatorSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void loadMasterCreators(1,masterCreatorSearch)}}} placeholder="Cari username / nama creator / platform..."/><button className="secondary" onClick={()=>void loadMasterCreators(1,masterCreatorSearch)}>Cari</button>{masterCreatorSearch&&<button className="secondary" onClick={()=>{setMasterCreatorSearch("");void loadMasterCreators(1,"")}}>Reset</button>}</div>
+        <div className="listing-v2-master-search"><input value={masterCreatorSearch} onChange={e=>setMasterCreatorSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void loadMasterCreators(1,masterCreatorSearch)}}} placeholder="Cari username / nama creator / platform…" autoComplete="off" spellCheck={false} aria-label="Cari Master Creator"/><button className="secondary" onClick={()=>void loadMasterCreators(1,masterCreatorSearch)}>Cari</button>{masterCreatorSearch&&<button className="secondary" onClick={()=>{setMasterCreatorSearch("");void loadMasterCreators(1,"")}}>Reset</button>}</div>
         <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator / Username</th><th>Platform</th><th>Affiliate ID</th><th>Social</th><th>Phone</th><th>Payment</th><th>Ratecard</th><th>Status</th></tr></thead><tbody>
           {masterCreators.map(creator=><tr key={creator.id}><td><div className="listing-master-creator"><span className={"listing-master-avatar "+(creator.avatar_url?"has-photo":"")}>{creator.avatar_url?<img src={creator.avatar_url} alt="" referrerPolicy="no-referrer"/>:String(creator.name||creator.username||"C").slice(0,1).toUpperCase()}</span><div><b>{creator.name||creator.username||"-"}</b>{creator.username&&creator.username!==creator.name&&<small>@{creator.username}</small>}</div></div></td><td>{creator.platform||"-"}</td><td>{creator.affiliate_id||"-"}</td><td><span className="listing-social-count">{Object.keys(creator.social_links||{}).filter(key=>Boolean(creator.social_links?.[key])).length} link</span></td><td>{creator.phone||"-"}</td><td>{creator.payment_type||"-"}</td><td>{money(creator.ratecard)}</td><td><span className="listing-v2-stage success">{creator.status||"-"}</span></td></tr>)}
         </tbody></table></div>
@@ -672,28 +672,28 @@ export default function Listings({workspaceId}:{workspaceId:string}){
 
     {socialOpen&&selectedCreator&&<div className="listing-v2-modal-backdrop" onMouseDown={()=>!socialSaving&&setSocialOpen(false)}>
       <section className="listing-v2-modal listing-social-modal" onMouseDown={e=>e.stopPropagation()}>
-        <header><div><span>CREATOR SOCIAL PROFILE</span><h3>Link Medsos & Foto Profil</h3><p>{creatorName} · Lumaway membaca foto dari metadata publik jika platform menyediakannya.</p></div><button disabled={socialSaving} onClick={()=>setSocialOpen(false)}>×</button></header>
+        <header><div><span>CREATOR SOCIAL PROFILE</span><h3>Link Medsos & Foto Profil</h3><p>{creatorName} · Lumaway membaca foto dari metadata publik jika platform menyediakannya.</p></div><button type="button" aria-label="Tutup profil sosial" disabled={socialSaving} onClick={()=>setSocialOpen(false)}>×</button></header>
         <div className="listing-social-form">
-          {SOCIAL_FIELDS.map(([key,label])=><label key={key}><span>{label}</span><input value={socialForm[key]||""} onChange={e=>setSocialForm(prev=>({...prev,[key]:e.target.value}))} placeholder={key==="other"?"https://platform-lain.com/profile":"https://..."}/></label>)}
-          <label className="wide"><span>Avatar URL <small>Opsional · dipakai jika foto tidak dapat dibaca otomatis</small></span><input value={avatarInput} onChange={e=>setAvatarInput(e.target.value)} placeholder="https://.../foto.jpg"/></label>
+          {SOCIAL_FIELDS.map(([key,label])=><label key={key}><span>{label}</span><input value={socialForm[key]||""} onChange={e=>setSocialForm(prev=>({...prev,[key]:e.target.value}))} placeholder={key==="other"?"https://platform-lain.com/profile…":"https://…"} inputMode="url" autoComplete="off" spellCheck={false}/></label>)}
+          <label className="wide"><span>Avatar URL <small>Opsional · dipakai jika foto tidak dapat dibaca otomatis</small></span><input value={avatarInput} onChange={e=>setAvatarInput(e.target.value)} placeholder="https://…/foto.jpg" inputMode="url" autoComplete="off" spellCheck={false}/></label>
           <div className="listing-social-preview"><span className={"listing-v2-avatar "+(avatarInput||selectedCreator.avatar_url?"has-photo":"")}>{avatarInput||selectedCreator.avatar_url?<img src={avatarInput||selectedCreator.avatar_url||""} alt="" referrerPolicy="no-referrer"/>:initials}</span><div><b>Auto Profile Photo</b><p>Saat disimpan, Lumaway mencoba membaca <code>og:image</code> / metadata publik dari link sosial. Jika platform memblokir akses publik, link tetap tersimpan dan Avatar URL manual dapat digunakan.</p></div></div>
         </div>
-        <footer><button className="secondary" disabled={socialSaving} onClick={()=>setSocialOpen(false)}>Batal</button><button className="primary" disabled={socialSaving} onClick={()=>void saveSocialProfile()}>{socialSaving?"Membaca profil...":"Simpan & Ambil Foto"}</button></footer>
+        <footer><button className="secondary" disabled={socialSaving} onClick={()=>setSocialOpen(false)}>Batal</button><button className="primary" disabled={socialSaving} onClick={()=>void saveSocialProfile()}>{socialSaving?"Membaca profil…":"Simpan & Ambil Foto"}</button></footer>
       </section>
     </div>}
 
     {activityFor&&<div className="listing-v2-modal-backdrop" onMouseDown={()=>!saving&&setActivityFor(null)}>
       <section className="listing-v2-modal" onMouseDown={e=>e.stopPropagation()}>
-        <header><div><span>CREATOR ACTIVITY</span><h3>Tambah Aktivitas</h3><p>{activityFor.creator_name||"Creator"} · {activityFor.product_name||activityFor.sku||"Listing"}</p></div><button onClick={()=>setActivityFor(null)}>×</button></header>
+        <header><div><span>CREATOR ACTIVITY</span><h3>Tambah Aktivitas</h3><p>{activityFor.creator_name||"Creator"} · {activityFor.product_name||activityFor.sku||"Listing"}</p></div><button type="button" aria-label="Tutup tambah aktivitas" onClick={()=>setActivityFor(null)}>×</button></header>
         <div className="listing-v2-activity-form">
           <label><span>Tanggal</span><input type="date" value={activityForm.activity_date} onChange={e=>setActivityForm({...activityForm,activity_date:e.target.value})}/></label>
           <label><span>Aktivitas</span><select value={activityForm.activity_type} onChange={e=>setActivityForm({...activityForm,activity_type:e.target.value})}>{ACTIVITY_TYPES.map(x=><option key={x}>{x}</option>)}</select></label>
           <label><span>Follow Up Via</span><select value={activityForm.follow_up_channel} onChange={e=>setActivityForm({...activityForm,follow_up_channel:e.target.value})}><option value="">Tidak ditentukan</option>{channelChoices.map(x=><option key={x}>{x}</option>)}</select><small>Pilih channel yang benar-benar digunakan pada aktivitas ini.</small></label>
-          <label><span>Hasil / Next Action</span><input value={activityForm.result} onChange={e=>setActivityForm({...activityForm,result:e.target.value})} placeholder="Contoh: Follow up 3 hari lagi"/></label>
+          <label><span>Hasil / Next Action</span><input value={activityForm.result} onChange={e=>setActivityForm({...activityForm,result:e.target.value})} placeholder="Contoh: Follow up 3 hari lagi…"/></label>
           <label><span>Next Follow Up</span><input type="datetime-local" value={activityForm.next_follow_up_at} onChange={e=>setActivityForm({...activityForm,next_follow_up_at:e.target.value})}/><small>Opsional. Jadwalkan follow-up berikutnya setelah aktivitas ini.</small></label>
-          <label><span>Catatan</span><textarea rows={4} value={activityForm.note} onChange={e=>setActivityForm({...activityForm,note:e.target.value})} placeholder="Catatan aktivitas..."/></label>
+          <label><span>Catatan</span><textarea rows={4} value={activityForm.note} onChange={e=>setActivityForm({...activityForm,note:e.target.value})} placeholder="Catatan aktivitas…"/></label>
         </div>
-        <footer><button className="secondary" onClick={()=>setActivityFor(null)}>Batal</button><button className="primary" disabled={saving} onClick={()=>void saveActivity()}>{saving?"Menyimpan...":"Simpan Aktivitas"}</button></footer>
+        <footer><button className="secondary" onClick={()=>setActivityFor(null)}>Batal</button><button className="primary" disabled={saving} onClick={()=>void saveActivity()}>{saving?"Menyimpan…":"Simpan Aktivitas"}</button></footer>
       </section>
     </div>}
   </section>;
