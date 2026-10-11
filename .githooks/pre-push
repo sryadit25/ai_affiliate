@@ -5,6 +5,7 @@
 # create/delete throwaway accounts on every push.
 #
 # Set SKIP_VERIFY=1 to bypass (e.g. reverting a bad commit).
+# Set SKIP_REBASE_GUARD=1 to bypass only the "behind remote" protection.
 set -e
 
 if [ "$SKIP_VERIFY" = "1" ]; then
@@ -13,6 +14,29 @@ if [ "$SKIP_VERIFY" = "1" ]; then
 fi
 
 cd "$(git rev-parse --show-toplevel)"
+
+# ── Guard: jangan pernah menimpa pekerjaan rekan tim ────────────────────────
+# Tolak push bila branch lokal tertinggal dari origin. Ini mencegah anggota
+# tim yang lupa `git pull` menimpa (overwrite) commit terbaru orang lain.
+# Bila fetch gagal (mis. offline), guard dilewati tanpa mengganggu push.
+if [ "$SKIP_REBASE_GUARD" != "1" ]; then
+  branch=$(git rev-parse --abbrev-ref HEAD)
+  if [ "$branch" != "HEAD" ]; then
+    if git fetch --quiet origin "$branch" 2>/dev/null; then
+      behind=$(git rev-list --count "HEAD..origin/$branch" 2>/dev/null || echo 0)
+      if [ "$behind" -gt 0 ]; then
+        echo "" >&2
+        echo "pre-push: DITOLAK — branch '$branch' tertinggal $behind commit dari origin/$branch." >&2
+        echo "pre-push: Ada perubahan baru di remote yang bisa tertimpa." >&2
+        echo "pre-push: Jalankan dulu:  git pull --rebase origin $branch" >&2
+        echo "pre-push: Selesaikan konflik, lalu push lagi." >&2
+        echo "pre-push: (Memaksa lewat:  SKIP_REBASE_GUARD=1 git push)" >&2
+        echo "" >&2
+        exit 1
+      fi
+    fi
+  fi
+fi
 
 echo "pre-push: validating migrations"
 npm run --silent check:migrations

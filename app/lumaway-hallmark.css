@@ -717,23 +717,20 @@
 }
 
 /* ── Action column: never clipped, always reachable ──
-   Root cause L42-43: tbody td max-width:200px + overflow:hidden memotong
-   .listing-v2-actions (nowrap, min-width 230px+), sehingga scroll mentok
-   tetap tidak bisa ke kanan. Kolom terakhir dibuat sticky kanan. */
-.listing-v2-actions { flex-wrap: nowrap; min-width: max-content; }
+   Sebelumnya kolom terakhir dibuat sticky kanan (right:0). Akibatnya kolom
+   tertutup/overlap di tepi kanan dan scroll horizontal mentok tidak bisa
+   menjangkau sisa konten. Solusi: biarkan kolom action mengalir normal
+   (tanpa sticky) supaya scroll-x bisa penuh sampai kanan, tidak terpotong,
+   dan tombol dibungkus (wrap) agar kolom tetap ringkas. */
+.listing-v2-actions { flex-wrap: wrap; gap: var(--lh-space-2); }
 .listing-v2-table-wrap thead th:last-child,
 .listing-v2-table-wrap tbody td:last-child {
-  position: sticky;
-  right: 0;
-  z-index: 3;
+  position: static;
   max-width: none;
+  width: 1%;
   overflow: visible;
-  background: var(--lh-paper);
-  box-shadow: -1px 0 0 var(--lh-rule);
+  white-space: nowrap;
 }
-.listing-v2-table-wrap thead th:last-child { z-index: 4; background: var(--lh-paper-2); }
-.listing-v2-table-wrap tbody tr:hover td:last-child { background: var(--lh-paper-2); }
-.listing-v2-table-wrap tbody tr.selected td:last-child { background: var(--lh-accent-soft); }
 
 /* ── Detail aside panel ── */
 .listing-v2-detail {
@@ -888,6 +885,8 @@
   font-size: var(--lh-text-xs);
   color: var(--lh-ink-3);
 }
+.listing-v2-social-empty p { margin: 0 0 var(--lh-space-3); }
+.listing-v2-social-empty button { min-height: 34px; }
 
 .listing-v2-social-links {
   display: flex;

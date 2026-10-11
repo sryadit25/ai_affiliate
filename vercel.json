@@ -1,25 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "git": {
-    "deploymentEnabled": {
-      "main": false,
-      "pr*": false,
-      "fix/*": false,
-      "feat/*": false,
-      "feature/*": false,
-      "chore/*": false,
-      "ux-pwa-proration-fixes": false,
-      "lumaway-user-access-social-fixes": false,
-      "fix/lumaway-production-stabilization": false,
-      "fix/vercel-monorepo-deployments": false,
-      "fix/dashboard-history-otp-admin-pricing": false,
-      "feat/lumaway-ops-intelligence-admin-v4": false,
-      "fix/lumaway-marketing-public-rewrite": false,
-      "fix/lumaway-web-proxy-origin": false,
-      "fix/lumaway-public-insights-live": false,
-      "fix/lumaway-ops-v4-polish": false
-    }
-  },
   "crons": [
     {
       "path": "/api/cron/weekly-insights",
