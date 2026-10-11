@@ -51,7 +51,6 @@ update public.listings l
 set product_name=coalesce(l.product_name,p.product_name),
     sku=coalesce(l.sku,p.sku),
     product_hpp=case when coalesce(l.product_hpp,0)=0 then coalesce(p.cost_price,0) else l.product_hpp end,
-    ratecard=case when coalesce(l.ratecard,0)=0 then coalesce(c.ratecard,0) else l.ratecard end,
     stage=case when nullif(btrim(l.stage),'') is null then 'Sample Sent' else l.stage end,
     updated_at=now()
 from public.product_master p
