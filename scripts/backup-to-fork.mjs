@@ -35,9 +35,17 @@ const head = git(["rev-parse", "--short", "HEAD"]);
 
 console.log(`backup: mengirim SEMUA branch + tag ke '${REMOTE}' (${url})`);
 
-// --mirror membuat salinan identik (termasuk hapus ref yang sudah tidak ada di
-// lokal). Tujuannya fork pribadi, jadi aman. Tidak pernah menyentuh origin.
-const push = tryGit(["push", "--mirror", REMOTE]);
+// Kirim hanya branch lokal + tag. Sengaja BUKAN `--mirror`, karena `--mirror`
+// ikut mendorong ref pelacak `refs/remotes/origin/*` (sampah) ke fork. Tidak
+// di-prune: backup hanya menambah/memperbarui, tak pernah menghapus data.
+// Tidak pernah menyentuh origin.
+const push = tryGit([
+  "push",
+  REMOTE,
+  "--force",
+  "+refs/heads/*:refs/heads/*",
+  "+refs/tags/*:refs/tags/*",
+]);
 if (!push.ok) {
   console.error("backup: GAGAL mengirim ke fork.");
   console.error(push.out);
