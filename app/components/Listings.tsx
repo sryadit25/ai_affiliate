@@ -543,8 +543,8 @@ export default function Listings({workspaceId}:{workspaceId:string}){
       <article><span>Uploaded / Live / Active</span><b>{stats.active.toLocaleString("id-ID")}</b></article>
     </div>
 
-    {error&&<div className="listing-v2-alert error">{error}</div>}
-    {message&&<div className="listing-v2-alert success">{message}</div>}
+    {error&&<div className="listing-v2-alert error" role="alert">{error}</div>}
+    {message&&<div className="listing-v2-alert success" role="status">{message}</div>}
     <ListingContactReadiness workspaceId={workspaceId}/>
     <ListingFollowupQueue workspaceId={workspaceId}/>
     <ListingFollowupCalendar workspaceId={workspaceId}/>
@@ -591,16 +591,16 @@ export default function Listings({workspaceId}:{workspaceId:string}){
 
     <div className="listing-v2-layout">
       <section className="listing-v2-main">
-        <div className="listing-v2-toolbar listing-v2-toolbar-inline">
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari creator, produk, SKU, platform, no WA, next action..."/>
-          <select value={platformFilter} onChange={e=>setPlatformFilter(e.target.value)}><option value="">Semua Platform</option>{platforms.map(x=><option key={x}>{x}</option>)}</select>
-          <select value={stageFilter} onChange={e=>setStageFilter(e.target.value)}><option value="">Semua Stage</option>{STAGES.map(x=><option key={x}>{x}</option>)}</select>
-          <select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)}><option value="">Semua Follow Up Via</option>{channelChoices.map(x=><option key={x}>{x}</option>)}</select>
-          <input type="date" value={dateStart} onChange={e=>setDateStart(e.target.value)}/>
-          <input type="date" value={dateEnd} onChange={e=>setDateEnd(e.target.value)}/>
+        <div className="listing-v2-section-head"><div><h3>Hasil Listing</h3><p>Aktivitas terbaru creator dan progres listing.</p></div><span aria-live="polite">{visibleRows.length.toLocaleString("id-ID")} hasil</span></div>
+        <div className="listing-v2-toolbar listing-v2-toolbar-inline" role="search">
+          <label className="listing-v2-search-label" htmlFor="listing-search"><span>Cari listing</span><input id="listing-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Cari creator, produk, SKU, platform, no WA, next action…" autoComplete="off" spellCheck={false}/></label>
+          <select id="listing-platform-filter" aria-label="Filter platform" value={platformFilter} onChange={e=>setPlatformFilter(e.target.value)}><option value="">Semua Platform</option>{platforms.map(x=><option key={x}>{x}</option>)}</select>
+          <select id="listing-stage-filter" aria-label="Filter stage" value={stageFilter} onChange={e=>setStageFilter(e.target.value)}><option value="">Semua Stage</option>{STAGES.map(x=><option key={x}>{x}</option>)}</select>
+          <select id="listing-channel-filter" aria-label="Filter Follow Up Via" value={channelFilter} onChange={e=>setChannelFilter(e.target.value)}><option value="">Semua Follow Up Via</option>{channelChoices.map(x=><option key={x}>{x}</option>)}</select>
+          <input id="listing-date-start" aria-label="Tanggal mulai" type="date" value={dateStart} onChange={e=>setDateStart(e.target.value)}/>
+          <input id="listing-date-end" aria-label="Tanggal akhir" type="date" value={dateEnd} onChange={e=>setDateEnd(e.target.value)}/>
           {(search||platformFilter||stageFilter||channelFilter||dateStart||dateEnd)&&<button className="secondary" onClick={()=>{setSearch("");setPlatformFilter("");setStageFilter("");setChannelFilter("");setDateStart("");setDateEnd("")}}>Reset</button>}
         </div>
-        <div className="listing-v2-section-head"><div><h3>Hasil Listing</h3><p>Aktivitas terbaru creator dan progres listing.</p></div><span>{visibleRows.length.toLocaleString("id-ID")} hasil</span></div>
         {loading?<div className="listing-v2-empty">Memuat Listings...</div>:visibleRows.length===0?<div className="listing-v2-empty"><b>Belum ada hasil listing.</b><span>Tambahkan listing atau ubah filter pencarian.</span></div>:
         <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator</th><th>Platform</th><th>Contact</th><th>No. WhatsApp</th><th>Follow Up Via</th><th>Product / SKU</th><th>Stage</th><th>Ratecard</th><th>Latest / Next</th><th>Action</th></tr></thead><tbody>
           {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)}>

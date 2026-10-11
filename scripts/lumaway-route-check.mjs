@@ -131,7 +131,7 @@ if (!appShell.includes('document.documentElement.dataset.theme = "light"')) {
   fail("Lumaway must stay in stable light-only mode");
 }
 
-if (!serviceWorker.includes('const CACHE = "lumaway-shell-v4"')) {
+if (!serviceWorker.includes('const CACHE = "lumaway-shell-v5"')) {
   fail("service worker cache version must match the light-only production shell");
 }
 if (serviceWorker.includes('caches.match("/")')) {

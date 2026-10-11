@@ -10,6 +10,7 @@ import "./runtime-guard.css";
 import "./luma-route-ui-hotfix.css";
 import "./lumaway-auth-v7.css";
 import "./luma-ops-v4.css";
+import "./lumaway-hallmark.css";
 import "./luma-layout-standard.css";
 import Script from "next/script";
 import ReferralCapture from "./components/ReferralCapture";
