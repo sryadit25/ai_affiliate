@@ -253,6 +253,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
 
   useEffect(()=>{void loadData();void loadMasterCreators(1,"")},[workspaceId]);
   useEffect(()=>{void loadSelectedDetail(selected)},[selected?.id,workspaceId]);
+  useEffect(()=>{if(!socialOpen&&!activityFor)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape"){setSocialOpen(false);setActivityFor(null)}};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[socialOpen,activityFor]);
   useEffect(()=>{
     const refresh=()=>{void loadData();void loadMasterCreators(1,masterCreatorSearch)};
     window.addEventListener("lumaway-database-updated",refresh as EventListener);
@@ -603,8 +604,8 @@ export default function Listings({workspaceId}:{workspaceId:string}){
         </div>
         {loading?<div className="listing-v2-empty" role="status">Memuat Listings…</div>:visibleRows.length===0?<div className="listing-v2-empty"><b>Belum ada hasil listing.</b><span>Tambahkan listing atau ubah filter pencarian.</span></div>:
         <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator</th><th>Platform</th><th>Contact</th><th>No. WhatsApp</th><th>Follow Up Via</th><th>Product / SKU</th><th>Stage</th><th>Ratecard</th><th>Latest / Next</th><th>Action</th></tr></thead><tbody>
-          {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)}>
-            <td><div className="listing-v2-creator-cell"><span className={rowCreator?.avatar_url?"has-photo":""}>{rowCreator?.avatar_url?<img src={rowCreator.avatar_url} alt="" referrerPolicy="no-referrer"/>:String(row.creator_name||"C").slice(0,1).toUpperCase()}</span><div><b>{row.creator_name||"-"}</b><small>{dateLabel(row.data_date)}</small></div></div></td>
+          {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)} tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSelected(row)}}}>
+            <td><div className="listing-v2-creator-cell"><span className={rowCreator?.avatar_url?"has-photo":""}>{rowCreator?.avatar_url?<img src={rowCreator.avatar_url} alt="" width={32} height={32} loading="lazy" referrerPolicy="no-referrer"/>:String(row.creator_name||"C").slice(0,1).toUpperCase()}</span><div><b>{row.creator_name||"-"}</b><small>{dateLabel(row.data_date)}</small></div></div></td>
             <td><span className="listing-v2-platform">{row.platform||"-"}</span></td>
             <td><div className="listing-contact-mini">{rowCreator?.username?<small>@{rowCreator.username}</small>:<small>Belum ada social</small>}{rowCreator?.affiliate_id?<small>ID: {rowCreator.affiliate_id}</small>:null}</div></td>
             <td>{rowContact.phone&&waHref(rowContact.phone)?<a className="listing-wa-direct" href={waHref(rowContact.phone)||undefined} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><span className="wa-mark">WA</span><b>{rowContact.phone}</b></a>:<small className="listing-wa-empty">Belum ada nomor</small>}</td>
@@ -621,7 +622,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
       <aside className="listing-v2-detail">
         {!selected?<div className="listing-v2-empty"><b>Pilih listing</b><span>Detail creator dan timeline akan tampil di sini.</span></div>:<>
           <div className="listing-v2-profile">
-            <div className={"listing-v2-avatar "+(selectedCreator?.avatar_url?"has-photo":"")}>{selectedCreator?.avatar_url?<img src={selectedCreator.avatar_url} alt={creatorName} referrerPolicy="no-referrer" onError={event=>{event.currentTarget.style.display="none"}}/>:initials}</div>
+            <div className={"listing-v2-avatar "+(selectedCreator?.avatar_url?"has-photo":"")}>{selectedCreator?.avatar_url?<img src={selectedCreator.avatar_url} alt={creatorName} width={44} height={44} referrerPolicy="no-referrer" onError={event=>{event.currentTarget.style.display="none"}}/>:initials}</div>
             <div><span>CUSTOMER 360</span><h3>{creatorName}</h3><p>@{selectedCreator?.username||selected.creator_name||"-"} · {selected.platform||selectedCreator?.platform||"-"}</p></div>
             <span className={"listing-v2-stage "+stageTone(selected.stage)}>{selected.stage||"New Lead"}</span>
           </div>
@@ -664,26 +665,26 @@ export default function Listings({workspaceId}:{workspaceId:string}){
       <div className="listing-v2-master-body">
         <div className="listing-v2-master-search"><input value={masterCreatorSearch} onChange={e=>setMasterCreatorSearch(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){e.preventDefault();void loadMasterCreators(1,masterCreatorSearch)}}} placeholder="Cari username / nama creator / platform…" autoComplete="off" spellCheck={false} aria-label="Cari Master Creator"/><button className="secondary" onClick={()=>void loadMasterCreators(1,masterCreatorSearch)}>Cari</button>{masterCreatorSearch&&<button className="secondary" onClick={()=>{setMasterCreatorSearch("");void loadMasterCreators(1,"")}}>Reset</button>}</div>
         <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator / Username</th><th>Platform</th><th>Affiliate ID</th><th>Social</th><th>Phone</th><th>Payment</th><th>Ratecard</th><th>Status</th></tr></thead><tbody>
-          {masterCreators.map(creator=><tr key={creator.id}><td><div className="listing-master-creator"><span className={"listing-master-avatar "+(creator.avatar_url?"has-photo":"")}>{creator.avatar_url?<img src={creator.avatar_url} alt="" referrerPolicy="no-referrer"/>:String(creator.name||creator.username||"C").slice(0,1).toUpperCase()}</span><div><b>{creator.name||creator.username||"-"}</b>{creator.username&&creator.username!==creator.name&&<small>@{creator.username}</small>}</div></div></td><td>{creator.platform||"-"}</td><td>{creator.affiliate_id||"-"}</td><td><span className="listing-social-count">{Object.keys(creator.social_links||{}).filter(key=>Boolean(creator.social_links?.[key])).length} link</span></td><td>{creator.phone||"-"}</td><td>{creator.payment_type||"-"}</td><td>{money(creator.ratecard)}</td><td><span className="listing-v2-stage success">{creator.status||"-"}</span></td></tr>)}
+          {masterCreators.map(creator=><tr key={creator.id}><td><div className="listing-master-creator"><span className={"listing-master-avatar "+(creator.avatar_url?"has-photo":"")}>{creator.avatar_url?<img src={creator.avatar_url} alt="" width={28} height={28} loading="lazy" referrerPolicy="no-referrer"/>:String(creator.name||creator.username||"C").slice(0,1).toUpperCase()}</span><div><b>{creator.name||creator.username||"-"}</b>{creator.username&&creator.username!==creator.name&&<small>@{creator.username}</small>}</div></div></td><td>{creator.platform||"-"}</td><td>{creator.affiliate_id||"-"}</td><td><span className="listing-social-count">{Object.keys(creator.social_links||{}).filter(key=>Boolean(creator.social_links?.[key])).length} link</span></td><td>{creator.phone||"-"}</td><td>{creator.payment_type||"-"}</td><td>{money(creator.ratecard)}</td><td><span className="listing-v2-stage success">{creator.status||"-"}</span></td></tr>)}
         </tbody></table></div>
         <div className="pager"><span className="pager-info">Page {masterCreatorPage} / {masterCreatorPages}</span><div className="button-row"><button className="secondary" disabled={masterCreatorPage<=1} onClick={()=>void loadMasterCreators(masterCreatorPage-1,masterCreatorSearch)}>Previous</button><button className="secondary" disabled={masterCreatorPage>=masterCreatorPages} onClick={()=>void loadMasterCreators(masterCreatorPage+1,masterCreatorSearch)}>Next</button></div></div>
       </div>
     </details>
 
     {socialOpen&&selectedCreator&&<div className="listing-v2-modal-backdrop" onMouseDown={()=>!socialSaving&&setSocialOpen(false)}>
-      <section className="listing-v2-modal listing-social-modal" onMouseDown={e=>e.stopPropagation()}>
+      <section className="listing-v2-modal listing-social-modal" role="dialog" aria-modal="true" aria-label="Link medsos dan foto profil creator" onMouseDown={e=>e.stopPropagation()}>
         <header><div><span>CREATOR SOCIAL PROFILE</span><h3>Link Medsos & Foto Profil</h3><p>{creatorName} · Lumaway membaca foto dari metadata publik jika platform menyediakannya.</p></div><button type="button" aria-label="Tutup profil sosial" disabled={socialSaving} onClick={()=>setSocialOpen(false)}>×</button></header>
         <div className="listing-social-form">
           {SOCIAL_FIELDS.map(([key,label])=><label key={key}><span>{label}</span><input value={socialForm[key]||""} onChange={e=>setSocialForm(prev=>({...prev,[key]:e.target.value}))} placeholder={key==="other"?"https://platform-lain.com/profile…":"https://…"} inputMode="url" autoComplete="off" spellCheck={false}/></label>)}
           <label className="wide"><span>Avatar URL <small>Opsional · dipakai jika foto tidak dapat dibaca otomatis</small></span><input value={avatarInput} onChange={e=>setAvatarInput(e.target.value)} placeholder="https://…/foto.jpg" inputMode="url" autoComplete="off" spellCheck={false}/></label>
-          <div className="listing-social-preview"><span className={"listing-v2-avatar "+(avatarInput||selectedCreator.avatar_url?"has-photo":"")}>{avatarInput||selectedCreator.avatar_url?<img src={avatarInput||selectedCreator.avatar_url||""} alt="" referrerPolicy="no-referrer"/>:initials}</span><div><b>Auto Profile Photo</b><p>Saat disimpan, Lumaway mencoba membaca <code>og:image</code> / metadata publik dari link sosial. Jika platform memblokir akses publik, link tetap tersimpan dan Avatar URL manual dapat digunakan.</p></div></div>
+          <div className="listing-social-preview"><span className={"listing-v2-avatar "+(avatarInput||selectedCreator.avatar_url?"has-photo":"")}>{avatarInput||selectedCreator.avatar_url?<img src={avatarInput||selectedCreator.avatar_url||""} alt="" width={44} height={44} loading="lazy" referrerPolicy="no-referrer"/>:initials}</span><div><b>Auto Profile Photo</b><p>Saat disimpan, Lumaway mencoba membaca <code>og:image</code> / metadata publik dari link sosial. Jika platform memblokir akses publik, link tetap tersimpan dan Avatar URL manual dapat digunakan.</p></div></div>
         </div>
         <footer><button className="secondary" disabled={socialSaving} onClick={()=>setSocialOpen(false)}>Batal</button><button className="primary" disabled={socialSaving} onClick={()=>void saveSocialProfile()}>{socialSaving?"Membaca profil…":"Simpan & Ambil Foto"}</button></footer>
       </section>
     </div>}
 
     {activityFor&&<div className="listing-v2-modal-backdrop" onMouseDown={()=>!saving&&setActivityFor(null)}>
-      <section className="listing-v2-modal" onMouseDown={e=>e.stopPropagation()}>
+      <section className="listing-v2-modal" role="dialog" aria-modal="true" aria-label="Tambah aktivitas creator" onMouseDown={e=>e.stopPropagation()}>
         <header><div><span>CREATOR ACTIVITY</span><h3>Tambah Aktivitas</h3><p>{activityFor.creator_name||"Creator"} · {activityFor.product_name||activityFor.sku||"Listing"}</p></div><button type="button" aria-label="Tutup tambah aktivitas" onClick={()=>setActivityFor(null)}>×</button></header>
         <div className="listing-v2-activity-form">
           <label><span>Tanggal</span><input type="date" value={activityForm.activity_date} onChange={e=>setActivityForm({...activityForm,activity_date:e.target.value})}/></label>

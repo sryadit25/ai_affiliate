@@ -47,6 +47,7 @@ export default function ListingQuickMessage({workspaceId,listing,creatorUsername
  }
 
  useEffect(()=>{void load()},[workspaceId]);
+  useEffect(()=>{if(!editing)return;const onKey=(e:KeyboardEvent)=>{if(e.key==="Escape")setEditing(false)};window.addEventListener("keydown",onKey);return()=>window.removeEventListener("keydown",onKey)},[editing]);
  useEffect(()=>{
   setChannel(listing.follow_up_channel||"WhatsApp");
   setStage(listing.stage||"Follow Up");
@@ -143,9 +144,9 @@ export default function ListingQuickMessage({workspaceId,listing,creatorUsername
 
   {msg&&<div className="lqm-msg" role="status">{msg}</div>}
 
-  {editing&&<div className="lqm-modal"><div>
+  {editing&&<div className="lqm-modal" role="presentation"><div role="dialog" aria-modal="true" aria-label="Tambah template pesan">
    <header><h4>Tambah Template</h4><button type="button" aria-label="Tutup tambah template" onClick={()=>setEditing(false)}>×</button></header>
-   <label>Nama<input value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Contoh: Follow Up Sample"/></label>
+       <label>Nama<input name="template-name" autoComplete="off" spellCheck={false} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Contoh: Follow Up Sample…"/></label>
    <label>Channel<select value={form.channel} onChange={e=>setForm({...form,channel:e.target.value})}>{CHANNELS.map(x=><option key={x}>{x}</option>)}</select></label>
    <label>Stage<select value={form.stage} onChange={e=>setForm({...form,stage:e.target.value})}>{STAGES.map(x=><option key={x||"all"} value={x}>{x||"Semua Stage"}</option>)}</select></label>
    <label>Isi Pesan<textarea rows={7} value={form.body} onChange={e=>setForm({...form,body:e.target.value})} placeholder={"Halo {{creator_name}}, follow up untuk {{product_name}}…"}/><small>Variables: creator_name, creator_username, product_name, sku, next_action, follow_up_date, pic_name</small></label>

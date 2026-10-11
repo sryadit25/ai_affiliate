@@ -136,6 +136,7 @@
   letter-spacing: -0.025em;
   color: var(--lh-ink);
   font-style: normal;
+  text-wrap: balance;
 }
 
 .listing-v2-header p {
@@ -213,6 +214,7 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--lh-ink);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Alert banners ── */
@@ -473,6 +475,7 @@
   border-collapse: collapse;
   font-size: var(--lh-text-sm);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .listing-v2-table-wrap thead th {
@@ -500,6 +503,7 @@
 .listing-v2-table-wrap tbody tr:last-child { border-bottom: none; }
 .listing-v2-table-wrap tbody tr:hover { background: var(--lh-paper-2); }
 .listing-v2-table-wrap tbody tr.selected { background: var(--lh-accent-soft); }
+.listing-v2-table-wrap tbody tr:focus-visible { outline: 2px solid var(--lh-focus); outline-offset: -2px; }
 
 .listing-v2-table-wrap tbody td {
   padding: var(--lh-space-3) var(--lh-space-4);
@@ -1023,6 +1027,7 @@
   font-size: var(--lh-text-xs);
   color: var(--lh-ink-3);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 /* ── Empty state ── */
@@ -1063,6 +1068,7 @@
 
 .listing-v2-master summary::-webkit-details-marker { display: none; }
 .listing-v2-master summary:hover { background: var(--lh-paper-2); }
+.listing-v2-master summary:focus-visible { outline: 2px solid var(--lh-focus); outline-offset: 2px; }
 
 .listing-v2-master summary h3 {
   margin: 0 0 2px;
