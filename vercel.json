@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "main": true,
+      "main": false,
       "pr*": false,
       "fix/*": false,
       "feat/*": false,
@@ -20,7 +20,6 @@
       "fix/lumaway-ops-v4-polish": false
     }
   },
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)apps/marketing/**'",
   "crons": [
     {
       "path": "/api/cron/weekly-insights",
