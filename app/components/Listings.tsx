@@ -34,12 +34,12 @@ type FormState={
 };
 
 const FOLLOW_UP_CHANNELS=["WhatsApp","DM Instagram","DM TikTok","Email","Telepon","Shopee Chat","TikTok Shop Chat","Agency / PIC","Offline","Lainnya"];
-const STAGES=["New Lead","Reach Out","Follow Up","Negotiation","Sample Sent","Content In Progress","Uploaded","Live","Won / Active","Lost / Inactive"];
-const ACTIVITY_TYPES=["Listing dibuat","Reach Out","Follow Up","Negotiation","Kirim Sample","Sample Received","Take Video","Video Upload","Live","Deal","Rejected","No Response","Catatan"];
+const STAGES=["New Lead","Reach Out","Follow Up","Negotiation","Sample Sent","Content In Progress","Uploaded","Live","Won / Active","Lost / Inactive","Cancel"];
+const ACTIVITY_TYPES=["Listing dibuat","Reach Out","Follow Up","Negotiation","Kirim Sample","Sample Received","Take Video","Video Upload","Live","Deal","Rejected","No Response","Cancel","Catatan"];
 const ACTIVITY_STAGE:Record<string,string>={
   "Reach Out":"Reach Out","Follow Up":"Follow Up","Negotiation":"Negotiation","Kirim Sample":"Sample Sent",
   "Sample Received":"Content In Progress","Take Video":"Content In Progress","Video Upload":"Uploaded","Live":"Live",
-  "Deal":"Won / Active","Rejected":"Lost / Inactive","No Response":"Follow Up",
+  "Deal":"Won / Active","Rejected":"Lost / Inactive","No Response":"Follow Up","Cancel":"Cancel",
 };
 const EMPTY_FORM:FormState={data_date:"",creator_id:"",creator_name:"",platform:"",product_master_id:"",product_hpp:"0",stage:"Sample Sent",payment_type:"",ratecard:"",posting_date:"",post_link:"",next_action:"",agreement_id:"",program_id:"",follow_up_channel:"",next_follow_up_at:"",follow_up_priority:"normal",follow_up_owner_user_id:"",notes:""};
 const toLocalInput=(value:string|null)=>{if(!value)return"";const d=new Date(value);const off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,16)};
@@ -56,7 +56,7 @@ const emptySocial=()=>Object.fromEntries(SOCIAL_FIELDS.map(([key])=>[key,""])) a
 function stageTone(stage:string|null){
   const value=String(stage||"New Lead").toLowerCase();
   if(value.includes("won")||value==="live"||value.includes("uploaded"))return"success";
-  if(value.includes("lost"))return"danger";
+  if(value.includes("lost")||value.includes("cancel"))return"danger";
   if(value.includes("sample")||value.includes("content")||value.includes("negotiation"))return"warning";
   if(value.includes("follow")||value.includes("reach"))return"info";
   return"neutral";
