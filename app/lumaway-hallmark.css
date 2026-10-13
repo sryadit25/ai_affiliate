@@ -476,7 +476,7 @@
 
 .listing-v2-table-wrap table {
   width: 100%;
-  min-width: 1120px;
+  min-width: 1260px;
   border-collapse: separate;
   border-spacing: 0;
   font-size: var(--lh-text-sm);
@@ -717,12 +717,16 @@
 }
 
 /* ── Action column: never clipped, always reachable ──
-   Sebelumnya kolom terakhir dibuat sticky kanan (right:0). Akibatnya kolom
-   tertutup/overlap di tepi kanan dan scroll horizontal mentok tidak bisa
-   menjangkau sisa konten. Solusi: biarkan kolom action mengalir normal
-   (tanpa sticky) supaya scroll-x bisa penuh sampai kanan, tidak terpotong,
-   dan tombol dibungkus (wrap) agar kolom tetap ringkas. */
-.listing-v2-actions { flex-wrap: wrap; gap: var(--lh-space-2); }
+   Kolom action mengalir natural tanpa sticky (tidak ngikut saat scroll)
+   sehingga scroll-x bisa penuh sampai ke paling kanan tanpa overlap atau terpotong.
+   Semua tombol tampil rapi satu baris dengan padding yang cukup di tepi kanan. */
+.listing-v2-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--lh-space-2);
+  min-width: max-content;
+}
 .listing-v2-table-wrap thead th:last-child,
 .listing-v2-table-wrap tbody td:last-child {
   position: static;
@@ -730,6 +734,12 @@
   width: 1%;
   overflow: visible;
   white-space: nowrap;
+  padding-right: var(--lh-space-5);
+  box-shadow: none;
+  background: inherit;
+}
+.listing-v2-table-wrap thead th:last-child {
+  background: var(--lh-paper-2);
 }
 
 /* ── Detail aside panel ── */

@@ -4,7 +4,7 @@ import {createClient} from "../../lib/supabase-browser";
 type Row=Record<string,any>;
 
 const CHANNELS=["WhatsApp","DM Instagram","DM TikTok","Email","Lainnya"];
-const STAGES=["","Reach Out","Follow Up","Negotiation","Sample Sent","Content In Progress","Uploaded","Live"];
+const STAGES=["","Reach Out","Follow Up","Negotiation","Sample Sent","Content In Progress","Uploaded","Live","Cancel"];
 
 function renderTemplate(body:string,ctx:Row){
  const vars:Record<string,string>={
