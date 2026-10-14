@@ -101,8 +101,10 @@ export default function Listings({workspaceId}:{workspaceId:string}){
   const [platformFilter,setPlatformFilter]=useState("");
   const [stageFilter,setStageFilter]=useState("");
   const [channelFilter,setChannelFilter]=useState("");
+  const [programFilter,setProgramFilter]=useState("");
   const [dateStart,setDateStart]=useState("");
   const [dateEnd,setDateEnd]=useState("");
+  const [programParticipants,setProgramParticipants]=useState<{creator_id:number;program_id:string;status:string}[]>([]);
 
   const [form,setForm]=useState<FormState>(EMPTY_FORM);
   const [creatorSearch,setCreatorSearch]=useState("");
@@ -133,7 +135,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
 
   async function loadData(){
     setLoading(true);setError("");
-    const [listingResult,creatorResult,productResult,safeOwnerResult,channelContactResult,agreementsResult,programsResult]=await Promise.all([
+    const [listingResult,creatorResult,productResult,safeOwnerResult,channelContactResult,agreementsResult,programsResult,participantsResult]=await Promise.all([
       supabase.from("listings").select("id,data_date,creator_id,creator_name,platform,product_master_id,product_name,sku,product_hpp,stage,payment_type,ratecard,posting_date,post_link,next_action,agreement_id,program_id,follow_up_channel,next_follow_up_at,follow_up_priority,follow_up_completed_at,follow_up_owner_user_id,notes").eq("workspace_id",workspaceId).order("id",{ascending:false}),
       supabase.from("creators").select("id,creator_code,name,username,platform,affiliate_id,phone,payment_type,ratecard,status,profile_url,avatar_url,social_links,social_profile_updated_at").eq("workspace_id",workspaceId).order("name").limit(7770),
       supabase.from("product_master").select("id,sku,product_name,category,cost_price").eq("workspace_id",workspaceId).order("sku").limit(1000),
@@ -141,6 +143,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
       supabase.from("luma_channel_contacts").select("id,creator_id,channel,phone,handle,url,note,is_primary").eq("workspace_id",workspaceId).order("is_primary",{ascending:false}).order("channel"),
       supabase.from("agreements").select("id,agreement_id,creator_id,document_status,program_id").eq("workspace_id",workspaceId).order("id",{ascending:false}).limit(500),
       supabase.from("luma_affiliate_programs").select("id,program_name,status").eq("workspace_id",workspaceId).limit(150),
+      supabase.from("luma_affiliate_program_participants").select("creator_id,program_id,status").eq("workspace_id",workspaceId).limit(2000),
     ]);
     if(listingResult.error)setError(listingResult.error.message); else {
       const data=(listingResult.data||[]) as Listing[];
@@ -151,6 +154,7 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     if(!productResult.error)setProducts((productResult.data||[]) as Product[]);
     if(!agreementsResult.error)setAgreements((agreementsResult.data||[]) as typeof agreements);
     if(!programsResult.error)setSupportPrograms((programsResult.data||[]) as typeof supportPrograms);
+    if(!participantsResult.error)setProgramParticipants((participantsResult.data||[]) as any);
     if(!channelContactResult.error){setChannelContacts((channelContactResult.data||[]) as ChannelContact[]);setChannelContactsMissing(false)}else{const errCode=String(channelContactResult.error.code||"");const errMsg=String(channelContactResult.error.message||"");setChannelContactsMissing(errCode==="PGRST205"||errCode==="42P01"||/does not exist|schema cache|table .* not/i.test(errMsg))}
     if(!safeOwnerResult.error)setFollowupOwners((safeOwnerResult.data||[]).map((x:any)=>({id:String(x.user_id),safe_label:String(x.safe_label||"PIC"),is_self:Boolean(x.is_self)})));
     // Daftar kanal follow-up berasal dari database (luma_channel_contacts). Bila tabel belum ada, pakai daftar bawaan.
@@ -433,6 +437,56 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     resolveCreatorFromIndex(row)
     ||(row.creator_name?resolvedContacts[String(row.creator_name).trim().toLowerCase()]:undefined)
   ,[resolveCreatorFromIndex,resolvedContacts]);
+
+  const getListingProgramStatus = useCallback((row: Listing) => {
+    if (row.program_id) {
+      const prog = supportPrograms.find(p => p.id === row.program_id);
+      return {
+        hasJoined: true,
+        programName: prog?.program_name || "Program Affiliate",
+      };
+    }
+    if (row.agreement_id) {
+      const agr = agreements.find(a => a.agreement_id === row.agreement_id);
+      if (agr?.program_id) {
+        const prog = supportPrograms.find(p => p.id === agr.program_id);
+        return {
+          hasJoined: true,
+          programName: prog?.program_name || "Program Affiliate",
+        };
+      }
+      if (agr) {
+        return {
+          hasJoined: true,
+          programName: "Agreement Program",
+        };
+      }
+    }
+    const cId = row.creator_id ? Number(row.creator_id) : undefined;
+    if (cId) {
+      const participant = programParticipants.find(p => p.creator_id === cId && p.status !== "withdrawn" && p.status !== "rejected");
+      if (participant) {
+        const prog = supportPrograms.find(p => p.id === participant.program_id);
+        return {
+          hasJoined: true,
+          programName: prog?.program_name || "Program Affiliate",
+        };
+      }
+      const creatorAgr = agreements.find(a => a.creator_id === cId);
+      if (creatorAgr) {
+        const prog = creatorAgr.program_id ? supportPrograms.find(p => p.id === creatorAgr.program_id) : null;
+        return {
+          hasJoined: true,
+          programName: prog?.program_name || "Agreement Program",
+        };
+      }
+    }
+    return {
+      hasJoined: false,
+      programName: null,
+    };
+  }, [supportPrograms, agreements, programParticipants]);
+
   const visibleRows=useMemo(()=>rows.filter(row=>{
     const q=search.trim().toLowerCase();
     if(platformFilter&&row.platform!==platformFilter)return false;
@@ -440,6 +494,14 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     if(channelFilter&&(row.follow_up_channel||"")!==channelFilter)return false;
     if(dateStart&&String(row.data_date||"")<dateStart)return false;
     if(dateEnd&&String(row.data_date||"")>dateEnd)return false;
+    if(programFilter==="joined"&&!getListingProgramStatus(row).hasJoined)return false;
+    if(programFilter==="not_joined"&&getListingProgramStatus(row).hasJoined)return false;
+    if(programFilter.startsWith("prog:")){
+      const progId=programFilter.slice(5);
+      const st=getListingProgramStatus(row);
+      const targetProg=supportPrograms.find(p=>p.id===progId)?.program_name;
+      if(row.program_id!==progId&&(!st.hasJoined||st.programName!==targetProg))return false;
+    }
     if(!q)return true;
     const rowCreator=resolveCreator(row);
     const rowContact=contactsForCreator(rowCreator?.id).find(item=>item.channel==="WhatsApp"&&item.is_primary)
@@ -447,11 +509,17 @@ export default function Listings({workspaceId}:{workspaceId:string}){
     const rowPhone=rowContact?.phone||rowCreator?.phone||null;
     const textMatch=[row.creator_name,row.product_name,row.sku,row.platform,row.stage,row.payment_type,row.next_action,row.follow_up_channel,rowPhone,rowCreator?.affiliate_id,rowCreator?.username].filter(Boolean).some(value=>String(value).toLowerCase().includes(q));
     if(textMatch)return true;
+    const pSt=getListingProgramStatus(row);
+    if(pSt.hasJoined){
+      if(q==="join"||q==="join program"||(pSt.programName&&pSt.programName.toLowerCase().includes(q)))return true;
+    }else{
+      if(q==="tidak join"||q==="tidak"||q==="belum join")return true;
+    }
     // Cari berdasarkan nomor WA walau formatnya beda (spasi, +, 0 vs 62).
     const qDigits=q.replace(/\D/g,"");
     const rowPhoneDigits=phoneDigits(rowPhone);
     return qDigits.length>=3&&rowPhoneDigits.includes(qDigits);
-  }),[rows,search,platformFilter,stageFilter,channelFilter,dateStart,dateEnd,resolveCreator,channelContacts]);
+  }),[rows,search,platformFilter,stageFilter,channelFilter,programFilter,dateStart,dateEnd,resolveCreator,channelContacts,getListingProgramStatus,supportPrograms]);
 
   // Defensive contact enrichment (PR87): lengkapi kontak creator untuk listing tanpa creator_id.
   // Bila RPC belum tersedia (migrasi belum diterapkan), error diabaikan tanpa efek samping.
@@ -600,16 +668,22 @@ export default function Listings({workspaceId}:{workspaceId:string}){
           <select id="listing-platform-filter" aria-label="Filter platform" value={platformFilter} onChange={e=>setPlatformFilter(e.target.value)}><option value="">Semua Platform</option>{platforms.map(x=><option key={x}>{x}</option>)}</select>
           <select id="listing-stage-filter" aria-label="Filter stage" value={stageFilter} onChange={e=>setStageFilter(e.target.value)}><option value="">Semua Stage</option>{STAGES.map(x=><option key={x}>{x}</option>)}</select>
           <select id="listing-channel-filter" aria-label="Filter Follow Up Via" value={channelFilter} onChange={e=>setChannelFilter(e.target.value)}><option value="">Semua Follow Up Via</option>{channelChoices.map(x=><option key={x}>{x}</option>)}</select>
+          <select id="listing-program-filter" aria-label="Filter status program" value={programFilter} onChange={e=>setProgramFilter(e.target.value)}>
+            <option value="">Semua Status Program</option>
+            <option value="joined">Join Program</option>
+            <option value="not_joined">Tidak Join</option>
+            {supportPrograms.map(p=><option key={p.id} value={`prog:${p.id}`}>{p.program_name}</option>)}
+          </select>
           <input id="listing-date-start" aria-label="Tanggal mulai" type="date" value={dateStart} onChange={e=>setDateStart(e.target.value)}/>
           <input id="listing-date-end" aria-label="Tanggal akhir" type="date" value={dateEnd} onChange={e=>setDateEnd(e.target.value)}/>
-          {(search||platformFilter||stageFilter||channelFilter||dateStart||dateEnd)&&<button className="secondary" onClick={()=>{setSearch("");setPlatformFilter("");setStageFilter("");setChannelFilter("");setDateStart("");setDateEnd("")}}>Reset</button>}
+          {(search||platformFilter||stageFilter||channelFilter||programFilter||dateStart||dateEnd)&&<button className="secondary" onClick={()=>{setSearch("");setPlatformFilter("");setStageFilter("");setChannelFilter("");setProgramFilter("");setDateStart("");setDateEnd("")}}>Reset</button>}
         </div>
         {loading?<div className="listing-v2-empty" role="status">Memuat Listings…</div>:visibleRows.length===0?<div className="listing-v2-empty"><b>Belum ada hasil listing.</b><span>Tambahkan listing atau ubah filter pencarian.</span></div>:
-        <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator</th><th>Platform</th><th>Contact</th><th>No. WhatsApp</th><th>Follow Up Via</th><th>Product / SKU</th><th>Stage</th><th>Ratecard</th><th>Latest / Next</th><th>Action</th></tr></thead><tbody>
-          {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)} tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSelected(row)}}}>
-            <td><div className="listing-v2-creator-cell"><span className={rowCreator?.avatar_url?"has-photo":""}>{rowCreator?.avatar_url?<img src={rowCreator.avatar_url} alt="" width={32} height={32} loading="lazy" referrerPolicy="no-referrer"/>:String(row.creator_name||"C").slice(0,1).toUpperCase()}</span><div><b>{row.creator_name||"-"}</b><small>{dateLabel(row.data_date)}</small></div></div></td>
+        <div className="listing-v2-table-wrap"><table><thead><tr><th>Creator</th><th>Platform</th><th>Join Program</th><th>No. WhatsApp</th><th>Follow Up Via</th><th>Product / SKU</th><th>Stage</th><th>Ratecard</th><th>Latest / Next</th><th>Action</th></tr></thead><tbody>
+          {visibleRows.map(row=>{const rowContact=contactForRow(row);const rowCreator=rowContact.creator;const links=splitPostLinks(row.post_link);const pStatus=getListingProgramStatus(row);return <tr key={row.id} className={selected?.id===row.id?"selected":""} onClick={()=>setSelected(row)} tabIndex={0} onKeyDown={e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();setSelected(row)}}}>
+            <td><div className="listing-v2-creator-cell"><span className={rowCreator?.avatar_url?"has-photo":""}>{rowCreator?.avatar_url?<img src={rowCreator.avatar_url} alt="" width={32} height={32} loading="lazy" referrerPolicy="no-referrer"/>:String(row.creator_name||"C").slice(0,1).toUpperCase()}</span><div><b>{row.creator_name||"-"}</b>{rowCreator?.username&&rowCreator.username!==row.creator_name?<small>@{rowCreator.username}</small>:<small>{dateLabel(row.data_date)}</small>}</div></div></td>
             <td><span className="listing-v2-platform">{row.platform||"-"}</span></td>
-            <td><div className="listing-contact-mini">{rowCreator?.username?<small>@{rowCreator.username}</small>:<small>Belum ada social</small>}{rowCreator?.affiliate_id?<small>ID: {rowCreator.affiliate_id}</small>:null}</div></td>
+            <td><div className="listing-program-cell">{pStatus.hasJoined?<><span className="listing-v2-stage success">Join Program</span>{pStatus.programName?<small className="listing-program-name" title={pStatus.programName}>{pStatus.programName}</small>:null}</>:<span className="listing-v2-stage neutral">Tidak Join</span>}</div></td>
             <td>{rowContact.phone&&waHref(rowContact.phone)?<a className="listing-wa-direct" href={waHref(rowContact.phone)||undefined} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}><span className="wa-mark">WA</span><b>{rowContact.phone}</b></a>:<small className="listing-wa-empty">Belum ada nomor</small>}</td>
             <td><div className="listing-followup-cell">{row.follow_up_channel?<span className="listing-channel-badge">{row.follow_up_channel}</span>:<small>Belum ditentukan</small>}</div></td>
             <td><b>{row.product_name||"-"}</b><small>{row.sku||"Tanpa SKU"}</small></td>
@@ -639,8 +713,8 @@ export default function Listings({workspaceId}:{workspaceId:string}){
             <div><span>PIC Follow Up</span><b>{picLabel(selected.follow_up_owner_user_id)||"-"}</b></div>
             <div><span>Product</span><b>{selected.product_name||"-"}</b></div>
             <div><span>SKU</span><b>{selected.sku||"-"}</b></div>
-             <div><span>Agreement</span><b>{selected.agreement_id||"Belum ada"}</b></div>
-             <div><span>Program Support</span><b>{supportPrograms.find(p=>p.id===selected.program_id)?.program_name||"Belum terhubung"}</b></div>
+            <div><span>Agreement</span><b>{selected.agreement_id||"Belum ada"}</b></div>
+            <div><span>Join Program</span><b>{(()=>{const s=getListingProgramStatus(selected);return s.hasJoined?(s.programName?`Ya · ${s.programName}`:"Ya (Join Program)"):"Tidak Join"})()}</b></div>
           </div>
           <section className="listing-v2-contacts">
             <div className="listing-v2-social-head"><div><span>FOLLOW-UP CONTACTS</span><h4>Kontak channel creator</h4><p>Simpan nomor WhatsApp, username Instagram, TikTok, atau channel lain untuk dipakai saat follow-up.</p></div><button type="button" className="secondary" disabled={!selectedCreator} onClick={()=>startContactEdit()}>+ Tambah Kontak</button></div>
