@@ -49,6 +49,7 @@ function Agreements({workspaceId}:{workspaceId:string}){
   const [creatorSearch,setCreatorSearch]=useState("");
   const [productSearch,setProductSearch]=useState("");
   const [savingAgreement,setSavingAgreement]=useState(false);
+  const [editingId,setEditingId]=useState<number|null>(null);
 
   async function load(){
     const [agreementResult,storeResult,programResult]=await Promise.all([
@@ -71,6 +72,48 @@ function Agreements({workspaceId}:{workspaceId:string}){
     setProductSearch(`${x.sku} - ${x.product_name||""}`);
     setForm(p=>({...p,product_master_id:String(x.id),product_name:x.product_name||x.sku,product_hpp:Number(x.cost_price||0)}));
   }
+  function startEdit(row:Row){
+    const id=Number(row.id);
+    setEditingId(id);
+    setForm({
+      creator_id:row.creator_id?String(row.creator_id):"",
+      creator_name:String(row.creator_name||""),
+      platform:String(row.platform||"TikTok"),
+      brand:String(row.brand||""),
+      category:String(row.category||""),
+      product_master_id:row.product_master_id?String(row.product_master_id):"",
+      product_name:String(row.product_name||""),
+      product_hpp:Number(row.product_hpp||0),
+      deal_type:String(row.deal_type||""),
+      ratecard:row.ratecard!==undefined&&row.ratecard!==null?String(row.ratecard):"",
+      support_type:String(row.support_type||""),
+      support_value:row.support_value!==undefined&&row.support_value!==null?String(row.support_value):"",
+      store_name:String(row.store_name||""),
+      store_id:String(row.store_id||""),
+      program_id:String(row.program_id||""),
+      start_date:row.start_date?String(row.start_date).slice(0,10):"",
+      end_date:row.end_date?String(row.end_date).slice(0,10):"",
+      document_status:String(row.document_status||"Pending"),
+      support_status:String(row.support_status||"Pending"),
+      bonus_eligible:String(row.bonus_eligible||"No"),
+      notes:String(row.notes||""),
+      signed_by_name:String(row.signed_by_name||""),
+      terms_accepted:Boolean(row.terms_accepted),
+    });
+    setCreatorSearch(String(row.creator_name||""));
+    setProductSearch(row.product_name?String(row.product_name):"");
+    setMsg(`Mengedit Agreement ${row.agreement_id||`#${id}`}. Ubah data di formulir lalu klik Simpan Perubahan.`);
+    try{
+      document.getElementById("agreements")?.scrollIntoView({behavior:"smooth",block:"start"});
+    }catch{}
+  }
+  function cancelEdit(){
+    setEditingId(null);
+    setForm({...empty});
+    setCreatorSearch("");
+    setProductSearch("");
+    setMsg("");
+  }
   async function save(){
     if(savingAgreement)return;
     const creatorId=Number(form.creator_id||0);
@@ -82,26 +125,44 @@ function Agreements({workspaceId}:{workspaceId:string}){
       return setMsg("Tanggal akhir tidak boleh sebelum tanggal mulai.");
     setSavingAgreement(true);
     setMsg("");
-    const payload={
-      ...form,workspace_id:workspaceId,agreement_id:`AGR-${Date.now()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`,
+    const basePayload={
+      ...form,workspace_id:workspaceId,
       creator_id:creatorId,creator_name:String(form.creator_name||creatorSearch).trim(),
       product_master_id:form.product_master_id?Number(form.product_master_id):null,
       program_id:form.program_id||null,
       start_date:form.start_date||null,end_date:form.end_date||null,
       store_name:form.store_name||null,store_id:form.store_id||null,
       product_hpp:Number(form.product_hpp||0),ratecard:Number(form.ratecard||0),support_value:Number(form.support_value||0),
-      signed_by_name:String(form.signed_by_name).trim(),signed_at:new Date().toISOString(),
+      signed_by_name:String(form.signed_by_name).trim(),
       updated_at:new Date().toISOString()
     };
     try{
-      const {data,error}=await supabase.from("agreements").insert(payload).select("agreement_id,e_stamp_id").single();
-      if(error){
-        setMsg(error.code==="42501"||error.code==="PGRST301"
-          ?"Akses menyimpan Agreement ditolak. Pastikan akun Anda owner, admin, atau manager pada workspace aktif."
-          :error.message);
+      if(editingId){
+        const {data,error}=await supabase.from("agreements").update(basePayload).eq("id",editingId).eq("workspace_id",workspaceId).select("agreement_id,e_stamp_id").single();
+        if(error){
+          setMsg(error.code==="42501"||error.code==="PGRST301"
+            ?"Akses mengubah Agreement ditolak. Pastikan akun Anda owner, admin, atau manager pada workspace aktif."
+            :error.message);
+        }else{
+          setMsg(`Agreement ${data?.agreement_id||`#${editingId}`} berhasil diperbarui.`);
+          setEditingId(null);
+          await load();setForm({...empty});setCreatorSearch("");setProductSearch("");
+        }
       }else{
-        setMsg("Agreement "+data.agreement_id+" tersimpan dengan Digital Seal ID "+data.e_stamp_id+". Status perlu review; bukan e-Meterai resmi.");
-        await load();setForm({...empty});setCreatorSearch("");setProductSearch("");
+        const insertPayload={
+          ...basePayload,
+          agreement_id:`AGR-${Date.now()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`,
+          signed_at:new Date().toISOString()
+        };
+        const {data,error}=await supabase.from("agreements").insert(insertPayload).select("agreement_id,e_stamp_id").single();
+        if(error){
+          setMsg(error.code==="42501"||error.code==="PGRST301"
+            ?"Akses menyimpan Agreement ditolak. Pastikan akun Anda owner, admin, atau manager pada workspace aktif."
+            :error.message);
+        }else{
+          setMsg("Agreement "+data.agreement_id+" tersimpan dengan Digital Seal ID "+data.e_stamp_id+". Status perlu review; bukan e-Meterai resmi.");
+          await load();setForm({...empty});setCreatorSearch("");setProductSearch("");
+        }
       }
     }catch(error){
       setMsg(error instanceof Error?error.message:"Gagal menyimpan Agreement.");
@@ -112,6 +173,10 @@ function Agreements({workspaceId}:{workspaceId:string}){
   return <section id="agreements" className="legacy-page-anchor asp-agreements">
     <div className="eyebrow">CREATOR MANAGEMENT · DIGITAL WORKFLOW</div><h1>Agreement & Creator Support</h1><p className="asp-agreement-description">Hubungkan kontrak dengan Master Creator, toko, produk, dan program reward/challenge. Digital Seal Lumaway adalah verifikasi internal dokumen, bukan e-Meterai resmi.</p>
     <div className="card">
+      {editingId&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,padding:"10px 14px",marginBottom:14,borderRadius:10,background:"#eff8ff",border:"1px solid #b2ddff",color:"#175cd3"}}>
+        <span><strong>Mode Edit:</strong> Sedang mengedit Agreement <code>{rows.find(r=>r.id===editingId)?.agreement_id||`#${editingId}`}</code></span>
+        <button type="button" className="secondary compact" onClick={cancelEdit}>Batal Edit</button>
+      </div>}
       <div className="grid">
         <label>Creator Search<CreatorAutocomplete workspaceId={workspaceId} value={creatorSearch} selectedId={form.creator_id}
                 createPlatform={form.platform} allowCreate={false} onTextChange={value=>{setCreatorSearch(value);setForm(p=>({...p,creator_id:"",creator_name:value}))}} onSelect={chooseCreator} onCreate={value=>{setCreatorSearch(value);setForm(p=>({...p,creator_id:"",creator_name:value}))}}/><small className="field-note">Pilih creator dari dropdown Master Creator. Jika belum tersedia, buat creator dahulu di Master Data.</small></label>
@@ -139,13 +204,16 @@ function Agreements({workspaceId}:{workspaceId:string}){
         <span><strong>Saya menyetujui Term of Policy Agreement (wajib).</strong>
           Saya memastikan data creator dan nilai support benar, memahami bahwa Digital Seal Lumaway hanya identitas dokumen internal (bukan e-Meterai resmi), dan persetujuan program/reward tetap mengikuti ketentuan workspace. Identitas akun serta waktu persetujuan dicatat untuk audit.</span>
       </label>
-      <button className="primary" disabled={savingAgreement||!form.terms_accepted} onClick={()=>void save()}>{savingAgreement?"Menyimpan...":"Simpan Agreement"}</button>
+      <div className="button-row" style={{display:"flex",gap:8,alignItems:"center",marginTop:8}}>
+        <button className="primary" disabled={savingAgreement||!form.terms_accepted} onClick={()=>void save()}>{savingAgreement?"Menyimpan...":(editingId?"Simpan Perubahan Agreement":"Simpan Agreement")}</button>
+        {editingId&&<button type="button" className="secondary" onClick={cancelEdit}>Batal</button>}
+      </div>
       {msg&&<p role="status" className="muted">{msg}</p>}
     </div>
     <div className="card"><h3>Agreement & Status Dokumen</h3>
-      <div className="scroll"><table><thead><tr>{["Agreement","Creator","Platform","Product","Status","Program","Term of Policy","Digital Seal","Signed By","PDF"].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>
-        {rows.map(row=><tr key={row.id}><td>{row.agreement_id||"-"}</td><td>{row.creator_name||"-"}</td><td>{row.platform||"-"}</td><td>{row.product_name||"-"}</td><td><span className={"status-pill "+(row.document_status==="Approved"?"s-paid":"")}>{row.document_status==="Approved"?"Approved":"Perlu Review"}</span></td><td>{supportPrograms.find(p=>p.id===row.program_id)?.program_name||"—"}</td><td>{row.terms_accepted?<span title={row.terms_accepted_at||""}>Disetujui · {row.terms_version||"internal"}</span>:"Belum tercatat (legacy)"}</td><td><code>{row.e_stamp_id||"-"}</code></td><td>{row.signed_by_name||"-"}</td><td>{row.e_stamp_id?<a className="secondary compact" href={`/api/agreements/${row.id}/pdf?workspace_id=${encodeURIComponent(workspaceId)}`} target="_blank" rel="noreferrer">PDF</a>:"-"}</td></tr>)}
-        {!rows.length&&<tr><td colSpan={10}>Belum ada Agreement.</td></tr>}
+      <div className="scroll"><table><thead><tr>{["Agreement","Creator","Platform","Product","Status","Program","Term of Policy","Digital Seal","Signed By","PDF","Edit"].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>
+        {rows.map(row=><tr key={row.id} style={editingId===Number(row.id)?{background:"#f5f8ff"}:undefined}><td>{row.agreement_id||"-"}</td><td>{row.creator_name||"-"}</td><td>{row.platform||"-"}</td><td>{row.product_name||"-"}</td><td><span className={"status-pill "+(row.document_status==="Approved"?"s-paid":"")}>{row.document_status==="Approved"?"Approved":"Perlu Review"}</span></td><td>{supportPrograms.find(p=>p.id===row.program_id)?.program_name||"—"}</td><td>{row.terms_accepted?<span title={row.terms_accepted_at||""}>Disetujui · {row.terms_version||"internal"}</span>:"Belum tercatat (legacy)"}</td><td><code>{row.e_stamp_id||"-"}</code></td><td>{row.signed_by_name||"-"}</td><td>{row.e_stamp_id?<a className="secondary compact" href={`/api/agreements/${row.id}/pdf?workspace_id=${encodeURIComponent(workspaceId)}`} target="_blank" rel="noreferrer">PDF</a>:"-"}</td><td><button type="button" className="secondary compact" onClick={()=>startEdit(row)}>{editingId===Number(row.id)?"Sedang Edit":"Edit"}</button></td></tr>)}
+        {!rows.length&&<tr><td colSpan={11}>Belum ada Agreement.</td></tr>}
       </tbody></table></div>
     </div>
   </section>

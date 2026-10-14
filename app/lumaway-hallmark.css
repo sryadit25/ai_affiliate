@@ -669,6 +669,23 @@
 .listing-v2-stage.info     { background: var(--lh-info-bg);     color: var(--lh-info);     border: 1px solid oklch(from var(--lh-info) l c h / 0.2); }
 .listing-v2-stage.neutral  { background: var(--lh-paper-2);     color: var(--lh-ink-2);    border: 1px solid var(--lh-rule); }
 
+/* ── Join Program cell ── */
+.listing-program-cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--lh-space-1);
+}
+.listing-program-name {
+  font-size: 11px;
+  color: var(--lh-ink-3);
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
 /* ── Action buttons in table ── */
 .listing-v2-actions {
   display: flex;
