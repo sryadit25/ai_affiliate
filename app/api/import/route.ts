@@ -4,7 +4,7 @@ import { getServerContext } from "../../../lib/server-auth";
 
 export const runtime = "nodejs";
 type Row = Record<string, any>;
-const PARSER_VERSION = "universal-v12-pr46-20260925";
+const PARSER_VERSION = "universal-v13-pr47-20261026";
 
 const clean = (v: any) => (v === null || v === undefined ? "" : String(v).trim());
 type NumericKind = "money" | "count" | "percent" | "decimal";
@@ -218,7 +218,7 @@ async function notifyTopCreators(admin:any,workspaceId:string,userId:string){
 function detectedPlatform(rows: Row[], requested: string) {
   const headers = Object.keys(rows[0] || {}).map(norm);
   const has = (...terms:string[]) => terms.some(term => headers.some(header => header.includes(norm(term))));
-  if (has("GMV dari kreator","Pesanan teratribusi","Perkiraan komisi","GMV dari LIVE kreator","GMV dari video afiliasi","Product ID","LIVE streams","Refunded GMV","Refunded items sold")) return "TikTok";
+  if (has("GMV dari kreator","GMV Afiliasi","Pesanan teratribusi","Pesanan produk afiliasi","Perkiraan komisi","Produk terjual","GMV dari LIVE kreator","GMV LIVE afiliasi","GMV dari video afiliasi","Video jualan afiliasi","Product ID","LIVE streams","Refunded GMV","Refunded items sold")) return "TikTok";
   if (has("Omzet Penjualan","Estimasi Komisi","ID Affiliates","Nama Affiliate","Affiliate ID","Affiliate Name","Affiliate Username","Sales(Rp)","Item Sold","Est.Commission(Rp)","Total Buyers","Kode Item","Nama Item","Item id","Item Name","Price(Rp)","Produk Terjual")) return "Shopee";
   return requested || "Other";
 }
@@ -253,26 +253,26 @@ function findHeader(row:Row,candidates:string[],exclude:string[]=[]){
 
 function performanceMapping(row:Row,platform:string):PerformanceMapping{
   const common={
-    creatorName:findHeader(row,["Nama Affiliate","Nama Afiliasi","Affiliate Name","Creator Name","Nama Creator","Creator","Username Affiliate","Username"]),
-    username:findHeader(row,["Username Affiliate","Username","Affiliate Username","Nama Pengguna","Creator Username"]),
-    affiliateId:findHeader(row,["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID"]),
-    gmv:findHeader(row,["GMV dari kreator","GMV Kreator","Creator GMV","Omzet Penjualan(Rp)","Omzet Penjualan","Sales(Rp)","Sales Rp","Sales","Total GMV","GMV","Total Penjualan","Nilai Penjualan","Sales Amount","Revenue"],["rate","persentase","growth"]),
-    qty:findHeader(row,["Produk yang terjual dari kreator","Produk Terjual","Jumlah Produk Terjual","Unit Terjual","Item Terjual","Item Sold","Items Sold","Qty Paid","Qty","Quantity","Units Sold"]),
-    orders:findHeader(row,["Pesanan teratribusi","Pesanan","Jumlah Pesanan","Total Pesanan","Attributed Orders","Orders","Order Count"],["id","rate"]),
+    creatorName:findHeader(row,["Kreator","Nama Kreator","Creator Name","Creator name","Nama Affiliate","Nama Afiliasi","Affiliate Name","Nama Creator","Creator","Akun Kreator","Username Affiliate","Username"]),
+    username:findHeader(row,["Username Affiliate","Username","Affiliate Username","Nama Pengguna","Creator Username","Username Kreator","Nama Pengguna Kreator","Handle Kreator","Handle"]),
+    affiliateId:findHeader(row,["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID","ID Kreator","Kreator ID","UID Kreator","Creator UID"]),
+    gmv:findHeader(row,["GMV dari kreator","GMV Afiliasi","GMV Kreator","Creator GMV","Omzet Penjualan(Rp)","Omzet Penjualan","Sales(Rp)","Sales Rp","Sales","Total GMV","GMV","Total Penjualan","Nilai Penjualan","Sales Amount","Revenue"],["rate","persentase","growth"]),
+    qty:findHeader(row,["Produk yang terjual dari kreator","Produk terjual","Produk Terjual","Jumlah Produk Terjual","Unit Terjual","Item Terjual","Item Sold","Items Sold","Qty Paid","Qty","Quantity","Units Sold"]),
+    orders:findHeader(row,["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan Afiliasi","Pesanan","Jumlah Pesanan","Total Pesanan","Attributed Orders","Orders","Order Count"],["id","rate"]),
     commission:findHeader(row,["Perkiraan komisi","Estimasi Komisi(Rp)","Estimasi Komisi","Est.Commission(Rp)","Est. Commission(Rp)","Est Commission(Rp)","Est.Commission","Estimated Commission(Rp)","Estimated Commission","Komisi Affiliate","Komisi Afiliasi","Total Komisi","Commission","Komisi"],["rate","tingkat","persentase","percentage"]),
-    refund:findHeader(row,["Pengembalian dana","Refund","Refund Amount","Nilai Refund"]),
+    refund:findHeader(row,["Pengembalian dana","Refund","Refund Amount","Nilai Refund","Refunded GMV"]),
     clicks:findHeader(row,["Clicks","Klik Produk","Product Clicks","Klik"]),
-    buyers:findHeader(row,["Total Pembeli","Pembeli","Buyers","Jumlah Pembeli"],["baru","new"]),
+    buyers:findHeader(row,["Total Pembeli","Pembeli","Buyers","Jumlah Pembeli","Rata-rata pembeli afiliasi"],["baru","new"]),
     newBuyers:findHeader(row,["Pembeli Baru","New Buyers","New Buyer"]),
-    liveGmv:findHeader(row,["GMV dari LIVE kreator","GMV LIVE kreator","LIVE GMV","Live GMV"]),
-    videoGmv:findHeader(row,["GMV dari video afiliasi","GMV Video Afiliasi","Video GMV"]),
-    showcaseGmv:findHeader(row,["GMV dari kartu produk afiliasi","Showcase GMV","Product Card GMV"]),
+    liveGmv:findHeader(row,["GMV dari LIVE kreator","GMV LIVE kreator","GMV LIVE afiliasi","LIVE GMV","Live GMV","GMV Live"]),
+    videoGmv:findHeader(row,["GMV dari video afiliasi","GMV video jualan afiliasi","GMV Video Afiliasi","Video GMV","GMV Video"]),
+    showcaseGmv:findHeader(row,["GMV dari kartu produk afiliasi","GMV kartu produk afiliasi","Showcase GMV","Product Card GMV","GMV Showcase"]),
     ctr:findHeader(row,["CTR","Click Through Rate"]),
     ctor:findHeader(row,["CTOR","Click To Order Rate"]),
-    liveCount:findHeader(row,["Siaran LIVE","Jumlah LIVE","Live Count","LIVE sessions","LIVE streams","Total LIVE"],["gmv","revenue","sales","amount"]),
-    videoCount:findHeader(row,["Jumlah Video","Video Count","Video"],["gmv","view","tayangan"]),
+    liveCount:findHeader(row,["Siaran LIVE afiliasi","Siaran LIVE","Jumlah LIVE","Live Count","LIVE sessions","LIVE streams","Total LIVE"],["gmv","revenue","sales","amount"]),
+    videoCount:findHeader(row,["Video jualan afiliasi","Jumlah Video","Video Count","Video","Videos"],["gmv","view","tayangan"]),
     sampleContent:findHeader(row,["Jumlah konten sampel","Sample Content","Konten Sampel"]),
-    sampleSent:findHeader(row,["Sampel terkirim","Sample Sent","Samples Sent"]),
+    sampleSent:findHeader(row,["Sampel terkirim","Sample Sent","Samples Sent","Sampel"]),
     impressions:findHeader(row,["Impresi produk","Product Impressions","Impressions","Impresi"]),
     videoViews:findHeader(row,["Tayangan video","Video Views","Views Video"]),
     refundQty:findHeader(row,["Produk yang dikembalikan dananya","Affiliate refunded items sold","Refunded items sold","Refunded Items","Item Refund","Produk Refund"],["gmv","amount"])
@@ -302,21 +302,21 @@ type ProductPerformanceMapping={
 };
 function productPerformanceMapping(row:Row,platform:string):ProductPerformanceMapping{
   const common={
-    sku:findHeader(row,["Kode Item","Product ID","Item ID","Kode Produk","SKU"]),
+    sku:findHeader(row,["Kode Item","Product ID","Item ID","Kode Produk","SKU","ID Produk"]),
     productName:findHeader(row,["Nama Item","Item Name","Product name","Product Name","Nama Produk","Produk"]),
     category:findHeader(row,["Kategori","Category","Kategori Produk","Product Category","Main Category","Kategori Utama"]),
-    price:findHeader(row,["Harga(Rp)","Harga","Price(Rp)","Price"]),
-    gmv:findHeader(row,["GMV dari kreator","Omzet Penjualan(Rp)","Omzet Penjualan","GMV","Sales(Rp)","Sales"]),
-    qty:findHeader(row,["Produk yang terjual dari kreator","Produk Terjual","Items sold","Item Sold","Qty","Quantity"]),
-    orders:findHeader(row,["Pesanan teratribusi","Pesanan","Orders","Order Count"]),
+    price:findHeader(row,["Harga(Rp)","Harga","Price(Rp)","Price","Harga Jual"]),
+    gmv:findHeader(row,["GMV dari kreator","GMV Afiliasi","Omzet Penjualan(Rp)","Omzet Penjualan","GMV","Sales(Rp)","Sales","Total GMV"],["rate","persentase","growth"]),
+    qty:findHeader(row,["Produk yang terjual dari kreator","Produk terjual","Produk Terjual","Items sold","Item Sold","Qty","Quantity","Unit Terjual"]),
+    orders:findHeader(row,["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan Afiliasi","Pesanan","Orders","Order Count"]),
     clicks:findHeader(row,["Clicks","Klik"]),
     commission:findHeader(row,["Perkiraan komisi","Estimasi Komisi(Rp)","Est. commission","Est.Commission(Rp)","Estimated Commission","Commission"]),
     buyers:findHeader(row,["Total Pembeli","Total Buyers","Buyers"]),
     newBuyers:findHeader(row,["Pembeli Baru","New Buyers"]),
     samples:findHeader(row,["Sampel terkirim","Samples","Sampel"]),
     salesCreator:findHeader(row,["Sales creator","Sales Creator","Creator Sales"]),
-    liveCount:findHeader(row,["LIVE streams","Live streams","LIVE Streams","Siaran LIVE"]),
-    videoCount:findHeader(row,["Videos","Video","Jumlah Video"]),
+    liveCount:findHeader(row,["LIVE streams","Live streams","LIVE Streams","Siaran LIVE","Siaran LIVE afiliasi"]),
+    videoCount:findHeader(row,["Videos","Video","Jumlah Video","Video jualan afiliasi"]),
     refund:findHeader(row,["Pengembalian dana","Refunded GMV","Refund GMV"]),
     refundQty:findHeader(row,["Produk yang dikembalikan dananya","Refunded items sold","Refunded Items Sold","Item Refund"]),
     flatFee:findHeader(row,["Est. flat fee","Estimated flat fee","Flat fee"]),
@@ -329,9 +329,9 @@ function productMappingSummary(mapping:ProductPerformanceMapping){
 }
 
 function creatorKeys(row: Row) {
-  const name = clean(value(row, ["Creator name","Creator Name","Nama Affiliate","Nama Afiliasi","Affiliate Name","Creator","Nama Creator","Username Affiliate","Username"]));
-  const username = clean(value(row, ["Username Affiliate","Username","Affiliate Username","Creator Username","Nama Pengguna"]));
-  const affiliateId = clean(value(row, ["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID"]));
+  const name = clean(value(row, ["Kreator","Nama Kreator","Creator name","Creator Name","Nama Affiliate","Nama Afiliasi","Affiliate Name","Creator","Nama Creator","Akun Kreator","Username Affiliate","Username"]));
+  const username = clean(value(row, ["Username Affiliate","Username","Affiliate Username","Creator Username","Nama Pengguna","Username Kreator","Nama Pengguna Kreator","Handle Kreator","Kreator"]));
+  const affiliateId = clean(value(row, ["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID","ID Kreator","Kreator ID","UID Kreator","Creator UID"]));
   return {
     name,
     username,
@@ -355,9 +355,26 @@ async function resolveCreatorIds(admin:any,workspaceId:string,rows:Row[],platfor
   };
 
   const identities=new Map<string,{name:string;username:string;affiliateId:string}>();
-  for(const row of rows){
-    const identity=creatorKeys(row);
-    if(!identity.name&&!identity.username&&!identity.affiliateId)continue;
+  for(let idx=0; idx<rows.length; idx++){
+    const row=rows[idx];
+    let identity=creatorKeys(row);
+    if(!identity.name&&!identity.username&&!identity.affiliateId){
+      const gmvVal = num(value(row, ["GMV dari kreator","GMV Afiliasi","GMV Kreator","Total GMV","GMV","Sales(Rp)","Sales","Omzet Penjualan"]), "money");
+      const ordersVal = num(value(row, ["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan","Orders"]), "count");
+      const qtyVal = num(value(row, ["Produk yang terjual dari kreator","Produk terjual","Items sold","Qty"]), "count");
+      if(gmvVal !== 0 || ordersVal !== 0 || qtyVal !== 0){
+        const fallbackName = "Afiliasi Lainnya (Tanpa Nama)";
+        const fallbackUsername = `unnamed_creator_${idx + 1}`;
+        identity = {
+          name: fallbackName,
+          username: fallbackUsername,
+          affiliateId: "",
+          keys: [`u:${fallbackUsername}`, `n:${fallbackName.toLowerCase()}`]
+        };
+      } else {
+        continue;
+      }
+    }
     const key=identityKey(identity.name,identity.username);
     identities.set(key,{name:identity.name,username:identity.username,affiliateId:identity.affiliateId});
   }
@@ -386,7 +403,6 @@ async function resolveCreatorIds(admin:any,workspaceId:string,rows:Row[],platfor
     if(error)throw error;
     for(const row of data||[])register(row);
   }
-
 
   // PR76C: merged creator identities remain resolvable through persistent aliases.
   // This prevents a future marketplace upload from recreating an archived duplicate.
@@ -427,8 +443,19 @@ async function resolveCreatorIds(admin:any,workspaceId:string,rows:Row[],platfor
     for(const row of created||[])register(row);
   }
 
-  return (row:Row)=>{
-    const identity=creatorKeys(row);
+  return (row:Row, idx:number=0)=>{
+    let identity=creatorKeys(row);
+    if(!identity.name&&!identity.username&&!identity.affiliateId){
+      const gmvVal = num(value(row, ["GMV dari kreator","GMV Afiliasi","GMV Kreator","Total GMV","GMV","Sales(Rp)","Sales","Omzet Penjualan"]), "money");
+      const ordersVal = num(value(row, ["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan","Orders"]), "count");
+      const qtyVal = num(value(row, ["Produk yang terjual dari kreator","Produk terjual","Items sold","Qty"]), "count");
+      if(gmvVal !== 0 || ordersVal !== 0 || qtyVal !== 0){
+        const fallbackUsername = `unnamed_creator_${idx + 1}`;
+        const key=identityKey("Afiliasi Lainnya (Tanpa Nama)", fallbackUsername);
+        return map.get(`i:${key}`)||null;
+      }
+      return null;
+    }
     if(identity.affiliateId){
       const affiliateHit=map.get(`a:${identity.affiliateId.trim().toLowerCase()}`);
       if(affiliateHit)return affiliateHit;
@@ -439,15 +466,81 @@ async function resolveCreatorIds(admin:any,workspaceId:string,rows:Row[],platfor
 }
 
 async function ensureCreator(admin: any, workspaceId: string, row: Row, platform: string, importId: string) {
-  const name = clean(value(row, ["Creator name", "Nama Affiliate", "Creator", "Nama Creator"]));
-  const username = clean(value(row, ["Username Affiliate", "Username", "Affiliate Username"]));
-  const affiliateId = clean(value(row, ["ID Affiliates", "Affiliate ID"]));
+  const name = clean(value(row, ["Kreator", "Nama Kreator", "Creator name", "Creator Name", "Nama Affiliate", "Creator", "Nama Creator", "Akun Kreator"]));
+  const username = clean(value(row, ["Username Affiliate", "Username", "Affiliate Username", "Username Kreator", "Nama Pengguna Kreator", "Kreator"]));
+  const affiliateId = clean(value(row, ["ID Affiliates", "Affiliate ID", "ID Kreator", "Creator ID"]));
   if (!name && !username) return null;
   let q = admin.from("creators").select("id").eq("workspace_id", workspaceId).is("merged_into_creator_id",null).ilike("platform", platform).limit(1);
   if (username) q = q.ilike("username", username); else if (affiliateId) q = q.eq("affiliate_id", affiliateId); else q = q.ilike("name", name);
   const { data: existing } = await q.maybeSingle(); if (existing?.id) return existing.id;
   const { data, error } = await admin.from("creators").insert({ workspace_id:workspaceId,creator_code:creatorCode(),name:name||username,username:username||name,platform,affiliate_id:affiliateId||null,status:"Active",source_import_id:importId,updated_at:new Date().toISOString() }).select("id").single();
   if (error) throw error; return data.id;
+}
+
+function mergePerformancePayload(existing: Row, incoming: Row): Row {
+  return {
+    ...existing,
+    creator_name: incoming.creator_name || existing.creator_name,
+    username: incoming.username || existing.username,
+    sku: incoming.sku || existing.sku,
+    product_name: incoming.product_name || existing.product_name,
+    category: incoming.category || existing.category,
+    store_name: incoming.store_name || existing.store_name,
+    store_id: incoming.store_id || existing.store_id,
+    channel: incoming.channel || existing.channel,
+    qty: (Number(existing.qty) || 0) + (Number(incoming.qty) || 0),
+    orders: (Number(existing.orders) || 0) + (Number(incoming.orders) || 0),
+    gmv: (Number(existing.gmv) || 0) + (Number(incoming.gmv) || 0),
+    refund: (Number(existing.refund) || 0) + (Number(incoming.refund) || 0),
+    refund_qty: (Number(existing.refund_qty) || 0) + (Number(incoming.refund_qty) || 0),
+    commission: (Number(existing.commission) || 0) + (Number(incoming.commission) || 0),
+    cost_product: (Number(existing.cost_product) || 0) + (Number(incoming.cost_product) || 0),
+    shipping_cost: (Number(existing.shipping_cost) || 0) + (Number(incoming.shipping_cost) || 0),
+    ads_spend: (Number(existing.ads_spend) || 0) + (Number(incoming.ads_spend) || 0),
+    points: (Number(existing.points) || 0) + (Number(incoming.points) || 0),
+    clicks: (Number(existing.clicks) || 0) + (Number(incoming.clicks) || 0),
+    buyers: (Number(existing.buyers) || 0) + (Number(incoming.buyers) || 0),
+    new_buyers: (Number(existing.new_buyers) || 0) + (Number(incoming.new_buyers) || 0),
+    live_gmv: (Number(existing.live_gmv) || 0) + (Number(incoming.live_gmv) || 0),
+    video_gmv: (Number(existing.video_gmv) || 0) + (Number(incoming.video_gmv) || 0),
+    showcase_gmv: (Number(existing.showcase_gmv) || 0) + (Number(incoming.showcase_gmv) || 0),
+    live_count: (Number(existing.live_count) || 0) + (Number(incoming.live_count) || 0),
+    video_count: (Number(existing.video_count) || 0) + (Number(incoming.video_count) || 0),
+    sample_content: (Number(existing.sample_content) || 0) + (Number(incoming.sample_content) || 0),
+    sample_sent: (Number(existing.sample_sent) || 0) + (Number(incoming.sample_sent) || 0),
+    impressions: (Number(existing.impressions) || 0) + (Number(incoming.impressions) || 0),
+    video_views: (Number(existing.video_views) || 0) + (Number(incoming.video_views) || 0),
+    ctr: Math.max(Number(existing.ctr) || 0, Number(incoming.ctr) || 0),
+    ctor: Math.max(Number(existing.ctor) || 0, Number(incoming.ctor) || 0),
+    updated_at: incoming.updated_at || existing.updated_at
+  };
+}
+
+function mergeProductPerformancePayload(existing: Row, incoming: Row): Row {
+  return {
+    ...existing,
+    product_name: incoming.product_name || existing.product_name,
+    category: incoming.category || existing.category,
+    store_name: incoming.store_name || existing.store_name,
+    store_id: incoming.store_id || existing.store_id,
+    variant_name: incoming.variant_name || existing.variant_name,
+    qty: (Number(existing.qty) || 0) + (Number(incoming.qty) || 0),
+    orders: (Number(existing.orders) || 0) + (Number(incoming.orders) || 0),
+    gmv: (Number(existing.gmv) || 0) + (Number(incoming.gmv) || 0),
+    refund: (Number(existing.refund) || 0) + (Number(incoming.refund) || 0),
+    refund_qty: (Number(existing.refund_qty) || 0) + (Number(incoming.refund_qty) || 0),
+    commission: (Number(existing.commission) || 0) + (Number(incoming.commission) || 0),
+    clicks: (Number(existing.clicks) || 0) + (Number(incoming.clicks) || 0),
+    buyers: (Number(existing.buyers) || 0) + (Number(incoming.buyers) || 0),
+    new_buyers: (Number(existing.new_buyers) || 0) + (Number(incoming.new_buyers) || 0),
+    live_count: (Number(existing.live_count) || 0) + (Number(incoming.live_count) || 0),
+    video_count: (Number(existing.video_count) || 0) + (Number(incoming.video_count) || 0),
+    sample_sent: (Number(existing.sample_sent) || 0) + (Number(incoming.sample_sent) || 0),
+    sales_creator: (Number(existing.sales_creator) || 0) + (Number(incoming.sales_creator) || 0),
+    flat_fee: (Number(existing.flat_fee) || 0) + (Number(incoming.flat_fee) || 0),
+    roi: Math.max(Number(existing.roi) || 0, Number(incoming.roi) || 0),
+    updated_at: incoming.updated_at || existing.updated_at
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -848,8 +941,36 @@ export async function POST(req: NextRequest) {
         });
       }
       const byKey=new Map<string,Row>();
-      for(const payload of payloads){if(byKey.has(payload.record_key))duplicates++;byKey.set(payload.record_key,payload)}
+      for(const payload of payloads){
+        const key=String(payload.record_key||"");
+        if(byKey.has(key)){
+          duplicates++;
+          const existing=byKey.get(key)!;
+          byKey.set(key,mergeProductPerformancePayload(existing,payload));
+        }else{
+          byKey.set(key,payload);
+        }
+      }
       const deduped=[...byKey.values()];
+      if(batchIndex>0&&deduped.length>0){
+        const keys=deduped.map(d=>String(d.record_key));
+        for(let k=0;k<keys.length;k+=500){
+          const sliceKeys=keys.slice(k,k+500);
+          const {data:priorRows}=await admin.from("sales")
+            .select("*")
+            .eq("workspace_id",workspaceId)
+            .in("record_key",sliceKeys);
+          if(priorRows&&priorRows.length>0){
+            const priorMap=new Map<string,Row>(priorRows.map((r:any)=>[String(r.record_key),r]));
+            for(let d=0;d<deduped.length;d++){
+              const rk=String(deduped[d].record_key);
+              if(priorMap.has(rk)){
+                deduped[d]=mergeProductPerformancePayload(priorMap.get(rk)!,deduped[d]);
+              }
+            }
+          }
+        }
+      }
       if(deduped.length){
         const {data:saved,error}=await admin.from("sales").upsert(deduped,{onConflict:"record_key"}).select("id");
         if(error)throw error;
@@ -878,13 +999,13 @@ export async function POST(req: NextRequest) {
       }:null;
       const resolveCreator=await resolveCreatorIds(admin,workspaceId,rows,platform,importId);
       for(let i=0;i<rows.length;i++){
-        const row=rows[i];const creatorId=resolveCreator(row);if(!creatorId){skipped++;continue}
-        const creatorName=dataType==="performance"&&perfMap
+        const row=rows[i];const creatorId=resolveCreator(row,i);if(!creatorId){skipped++;continue}
+        const creatorName=(dataType==="performance"&&perfMap
           ? clean(mappedRaw(row,perfMap.creatorName))||clean(mappedRaw(row,perfMap.username))
-          : clean(value(row,["Creator name","Nama Affiliate","Creator","Nama Creator"]))||clean(value(row,["Username Affiliate","Username"]));
-        const username=dataType==="performance"&&perfMap
+          : clean(value(row,["Kreator","Nama Kreator","Creator name","Nama Affiliate","Creator","Nama Creator"]))||clean(value(row,["Username Affiliate","Username"])))||"Afiliasi Lainnya (Tanpa Nama)";
+        const username=(dataType==="performance"&&perfMap
           ? clean(mappedRaw(row,perfMap.username))||creatorName
-          : clean(value(row,["Username Affiliate","Username"]))||creatorName;
+          : clean(value(row,["Username Affiliate","Username","Username Kreator"]))||creatorName)||"unnamed_creator";
         let gmv=0,qty=0,orders=0,commission=0,refund=0,refundQty=0,clicks=0,buyers=0,newBuyers=0,liveGmv=0,videoGmv=0,showcaseGmv=0,ctr=0,ctor=0,liveCount=0,videoCount=0,sampleContent=0,sampleSent=0,impressions=0,videoViews=0;
         if(dataType==="performance"&&perfMap&&moneyStyles){
           gmv=moneyValue(mappedRaw(row,perfMap.gmv),moneyStyles.gmv);
@@ -928,10 +1049,34 @@ export async function POST(req: NextRequest) {
         const byKey=new Map<string,Row>();
         for(const payload of payloads){
           const key=String(payload.record_key||"");
-          if(byKey.has(key))duplicates++;
-          byKey.set(key,payload);
+          if(byKey.has(key)){
+            duplicates++;
+            const existing=byKey.get(key)!;
+            byKey.set(key,mergePerformancePayload(existing,payload));
+          }else{
+            byKey.set(key,payload);
+          }
         }
         const deduped=[...byKey.values()];
+        if(batchIndex>0&&deduped.length>0){
+          const keys=deduped.map(d=>String(d.record_key));
+          for(let k=0;k<keys.length;k+=500){
+            const sliceKeys=keys.slice(k,k+500);
+            const {data:priorRows}=await admin.from("sales")
+              .select("*")
+              .eq("workspace_id",workspaceId)
+              .in("record_key",sliceKeys);
+            if(priorRows&&priorRows.length>0){
+              const priorMap=new Map<string,Row>(priorRows.map((r:any)=>[String(r.record_key),r]));
+              for(let d=0;d<deduped.length;d++){
+                const rk=String(deduped[d].record_key);
+                if(priorMap.has(rk)){
+                  deduped[d]=mergePerformancePayload(priorMap.get(rk)!,deduped[d]);
+                }
+              }
+            }
+          }
+        }
         const {data:saved,error}=await admin.from("sales").upsert(deduped,{onConflict:"record_key"}).select("id");
         if(error)throw error;
         inserted+=saved?.length||deduped.length;

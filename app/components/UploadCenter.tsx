@@ -21,7 +21,7 @@ async function fileHash(buffer: ArrayBuffer) { const hash = await crypto.subtle.
 function normalizeHeader(value:any){return String(value||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"")}
 function detectPlatformFromRows(rows:any[],fallback:string){
  const headers=Object.keys(rows?.[0]||{}).map(normalizeHeader);const has=(...terms:string[])=>terms.some(term=>headers.some(header=>header.includes(normalizeHeader(term))));
- if(has("GMV dari kreator","Pesanan teratribusi","Perkiraan komisi","GMV dari LIVE kreator","GMV dari video afiliasi","Product ID","LIVE streams","Refunded GMV","Refunded items sold"))return "TikTok";
+ if(has("GMV dari kreator","GMV Afiliasi","Pesanan teratribusi","Pesanan produk afiliasi","Perkiraan komisi","Produk terjual","GMV dari LIVE kreator","GMV LIVE afiliasi","GMV dari video afiliasi","Video jualan afiliasi","Product ID","LIVE streams","Refunded GMV","Refunded items sold"))return "TikTok";
  if(has("Omzet Penjualan","Estimasi Komisi","ID Affiliates","Nama Affiliate","Affiliate ID","Affiliate Name","Affiliate Username","Sales(Rp)","Item Sold","Est.Commission(Rp)","Total Buyers","Kode Item","Nama Item","Item id","Item Name","Price(Rp)","Produk Terjual"))return "Shopee";
  return fallback;
 }

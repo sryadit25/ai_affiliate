@@ -33,7 +33,7 @@ async function parseFile(file:File){
 }
 function detectedPlatform(headers:string[],fallback:string){
   const list=headers.map(norm);const has=(terms:string[])=>terms.some(term=>list.some(header=>header.includes(norm(term))));
-  if(has(["GMV dari kreator","Pesanan teratribusi","Perkiraan komisi","Product ID","LIVE streams","Refunded GMV"]))return"TikTok";
+  if(has(["GMV dari kreator","GMV Afiliasi","Pesanan teratribusi","Pesanan produk afiliasi","Perkiraan komisi","Produk terjual","Product ID","LIVE streams","Refunded GMV"]))return"TikTok";
   if(has(["Omzet Penjualan","Estimasi Komisi","ID Affiliates","Nama Affiliate","Sales(Rp)","Item Sold","Kode Item","Nama Item"]))return"Shopee";
   return fallback||"Other";
 }
@@ -47,23 +47,23 @@ function findHeader(headers:string[],candidates:string[]){
 
 const COMMON:Record<string,Field[]>={
   performance:[
-    {label:"Creator Name",output:"Creator Name",candidates:["Creator Name","Creator name","Nama Affiliate","Nama Afiliasi","Affiliate Name","Nama Creator","Creator"]},
-    {label:"Username",output:"Username",candidates:["Username Affiliate","Affiliate Username","Username","Creator Username"]},
-    {label:"Affiliate ID",output:"Affiliate ID",candidates:["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID"]},
-    {label:"GMV",output:"GMV",candidates:["GMV dari kreator","Creator GMV","Omzet Penjualan(Rp)","Omzet Penjualan","Sales(Rp)","Total GMV","GMV","Revenue"]},
-    {label:"Qty / Items Sold",output:"Qty",candidates:["Produk yang terjual dari kreator","Produk Terjual","Items Sold","Item Sold","Qty Paid","Qty","Quantity"]},
-    {label:"Orders",output:"Orders",candidates:["Pesanan teratribusi","Attributed Orders","Orders","Pesanan","Order Count"]},
+    {label:"Creator Name",output:"Creator Name",candidates:["Kreator","Nama Kreator","Creator Name","Creator name","Nama Affiliate","Nama Afiliasi","Affiliate Name","Nama Creator","Creator","Akun Kreator"]},
+    {label:"Username",output:"Username",candidates:["Username Affiliate","Affiliate Username","Username","Creator Username","Username Kreator","Nama Pengguna Kreator","Handle Kreator","Handle"]},
+    {label:"Affiliate ID",output:"Affiliate ID",candidates:["ID Affiliates","Affiliate ID","ID Affiliate","Creator ID","ID Kreator","Kreator ID","UID Kreator"]},
+    {label:"GMV",output:"GMV",candidates:["GMV dari kreator","GMV Afiliasi","Creator GMV","Omzet Penjualan(Rp)","Omzet Penjualan","Sales(Rp)","Total GMV","GMV","Revenue"]},
+    {label:"Qty / Items Sold",output:"Qty",candidates:["Produk yang terjual dari kreator","Produk terjual","Produk Terjual","Items Sold","Item Sold","Qty Paid","Qty","Quantity"]},
+    {label:"Orders",output:"Orders",candidates:["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan Afiliasi","Attributed Orders","Orders","Pesanan","Order Count"]},
     {label:"Commission",output:"Commission",candidates:["Perkiraan komisi","Estimasi Komisi(Rp)","Est.Commission(Rp)","Estimated Commission","Commission","Komisi"]},
     {label:"Refund GMV",output:"Refund",candidates:["Pengembalian dana","Refund","Refund Amount","Refunded GMV"]},
     {label:"Refunded Items",output:"Refunded items sold",candidates:["Produk yang dikembalikan dananya","Refunded items sold","Item Refund"]},
     {label:"Clicks",output:"Clicks",candidates:["Clicks","Klik Produk","Product Clicks","Klik"]},
-    {label:"Total Buyers",output:"Total Buyers",candidates:["Total Buyers","Total Pembeli","Pembeli","Buyers"]},
+    {label:"Total Buyers",output:"Total Buyers",candidates:["Total Buyers","Total Pembeli","Pembeli","Buyers","Rata-rata pembeli afiliasi"]},
     {label:"New Buyers",output:"New Buyers",candidates:["New Buyers","Pembeli Baru"]},
-    {label:"LIVE GMV",output:"GMV dari LIVE kreator",candidates:["GMV dari LIVE kreator","LIVE GMV","Live GMV"]},
-    {label:"Video GMV",output:"GMV dari video afiliasi",candidates:["GMV dari video afiliasi","Video GMV"]},
-    {label:"Total LIVE",output:"Siaran LIVE",candidates:["Siaran LIVE","Jumlah LIVE","Live Count","LIVE streams","Total LIVE"]},
-    {label:"Total Video",output:"Jumlah Video",candidates:["Jumlah Video","Video Count","Videos","Video"]},
-    {label:"Sample Sent",output:"Sampel terkirim",candidates:["Sampel terkirim","Sample Sent","Samples Sent"]},
+    {label:"LIVE GMV",output:"GMV dari LIVE kreator",candidates:["GMV dari LIVE kreator","GMV LIVE kreator","GMV LIVE afiliasi","LIVE GMV","Live GMV"]},
+    {label:"Video GMV",output:"GMV dari video afiliasi",candidates:["GMV dari video afiliasi","GMV video jualan afiliasi","Video GMV"]},
+    {label:"Total LIVE",output:"Siaran LIVE",candidates:["Siaran LIVE afiliasi","Siaran LIVE","Jumlah LIVE","Live Count","LIVE streams","Total LIVE"]},
+    {label:"Total Video",output:"Jumlah Video",candidates:["Video jualan afiliasi","Jumlah Video","Video Count","Videos","Video"]},
+    {label:"Sample Sent",output:"Sampel terkirim",candidates:["Sampel terkirim","Sample Sent","Samples Sent","Sampel"]},
     {label:"CTR",output:"CTR",candidates:["CTR","Click Through Rate"]},
     {label:"Impressions",output:"Impressions",candidates:["Impresi produk","Product Impressions","Impressions","Impresi"]},
     {label:"Video Views",output:"Tayangan video",candidates:["Tayangan video","Video Views"]},
@@ -71,23 +71,23 @@ const COMMON:Record<string,Field[]>={
     {label:"Store ID",output:"Store ID",candidates:["Store ID","Shop ID","Seller ID","ID Toko"]},
   ],
   product_performance:[
-    {label:"Product ID / Item ID",output:"Product ID",candidates:["Kode Item","Product ID","Item ID","Kode Produk","SKU"],required:true},
+    {label:"Product ID / Item ID",output:"Product ID",candidates:["Kode Item","Product ID","Item ID","Kode Produk","SKU","ID Produk"],required:true},
     {label:"Product Name",output:"Product Name",candidates:["Nama Item","Item Name","Product Name","Nama Produk","Produk"],required:true},
     {label:"Category",output:"Category",candidates:["Kategori","Category","Kategori Produk","Product Category"]},
-    {label:"Price",output:"Price",candidates:["Harga(Rp)","Harga","Price(Rp)","Price"]},
-    {label:"GMV / Sales",output:"GMV",candidates:["Omzet Penjualan(Rp)","Omzet Penjualan","GMV","Sales(Rp)","Sales"],required:true},
-    {label:"Items Sold",output:"Items sold",candidates:["Produk Terjual","Items sold","Item Sold","Qty","Quantity"]},
-    {label:"Orders",output:"Orders",candidates:["Pesanan","Orders","Order Count"]},
+    {label:"Price",output:"Price",candidates:["Harga(Rp)","Harga","Price(Rp)","Price","Harga Jual"]},
+    {label:"GMV / Sales",output:"GMV",candidates:["Omzet Penjualan(Rp)","Omzet Penjualan","GMV","Sales(Rp)","Sales","GMV dari kreator","GMV Afiliasi"],required:true},
+    {label:"Items Sold",output:"Items sold",candidates:["Produk yang terjual dari kreator","Produk terjual","Produk Terjual","Items sold","Item Sold","Qty","Quantity"]},
+    {label:"Orders",output:"Orders",candidates:["Pesanan teratribusi","Pesanan produk afiliasi","Pesanan","Orders","Order Count"]},
     {label:"Clicks",output:"Clicks",candidates:["Clicks","Klik"]},
-    {label:"Commission",output:"Commission",candidates:["Estimasi Komisi(Rp)","Est. commission","Est.Commission(Rp)","Estimated Commission","Commission"]},
+    {label:"Commission",output:"Commission",candidates:["Perkiraan komisi","Estimasi Komisi(Rp)","Est. commission","Est.Commission(Rp)","Estimated Commission","Commission"]},
     {label:"Total Buyers",output:"Total Buyers",candidates:["Total Pembeli","Total Buyers","Buyers"]},
     {label:"New Buyers",output:"New Buyers",candidates:["Pembeli Baru","New Buyers"]},
-    {label:"Samples",output:"Samples",candidates:["Samples","Sampel"]},
+    {label:"Samples",output:"Samples",candidates:["Sampel terkirim","Samples","Sampel"]},
     {label:"Sales Creator",output:"Sales Creator",candidates:["Sales creator","Sales Creator","Creator Sales"]},
-    {label:"LIVE Streams",output:"LIVE streams",candidates:["LIVE streams","Live streams","Siaran LIVE"]},
-    {label:"Videos",output:"Videos",candidates:["Videos","Video","Jumlah Video"]},
+    {label:"LIVE Streams",output:"LIVE streams",candidates:["LIVE streams","Live streams","Siaran LIVE","Siaran LIVE afiliasi"]},
+    {label:"Videos",output:"Videos",candidates:["Video jualan afiliasi","Videos","Video","Jumlah Video"]},
     {label:"Refunded GMV",output:"Refunded GMV",candidates:["Refunded GMV","Pengembalian dana","Refund GMV"]},
-    {label:"Refunded Items",output:"Refunded items sold",candidates:["Refunded items sold","Refunded Items Sold","Item Refund"]},
+    {label:"Refunded Items",output:"Refunded items sold",candidates:["Produk yang dikembalikan dananya","Refunded items sold","Refunded Items Sold","Item Refund"]},
     {label:"Flat Fee",output:"Est. flat fee",candidates:["Est. flat fee","Estimated flat fee","Flat fee"]},
     {label:"ROI",output:"ROI",candidates:["ROI"]},
     {label:"Store Name",output:"Store Name",candidates:["Store Name","Shop Name","Nama Toko","Toko","Seller Name","Store","Shop"]},
